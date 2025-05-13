@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-8">
+    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">{{ title }}</h2>
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div>
+        {{ form.name.label_tag }}
+        {{ form.name|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.name.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.email.label_tag }}
+        {{ form.email|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.email.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.telephone.label_tag }}
+        {{ form.telephone|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.telephone.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.address_street.label_tag }}
+        {{ form.address_street|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.address_street.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.address_city.label_tag }}
+        {{ form.address_city|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.address_city.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.address_postcode.label_tag }}
+        {{ form.address_postcode|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.address_postcode.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="w-1/2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition">Save</button>
+        <a href="{% url 'customer_list' %}" class="w-1/2 py-2 px-4 bg-gray-400 hover:bg-gray-500 text-white font-semibold rounded text-center transition">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

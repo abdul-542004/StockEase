@@ -1,0 +1,102 @@
+{% extends 'core/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-8">
+    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">{{ title }}</h2>
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div>
+        {{ form.barCode.label_tag }}
+        {{ form.barCode|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.barCode.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.name.label_tag }}
+        {{ form.name|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.name.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.description.label_tag }}
+        {{ form.description|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.description.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.category.label_tag }}
+        {{ form.category|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.category.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.expiryDate.label_tag }}
+        {{ form.expiryDate|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.expiryDate.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.averageCostPrice.label_tag }}
+        {{ form.averageCostPrice|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.averageCostPrice.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.sellingPrice.label_tag }}
+        {{ form.sellingPrice|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.sellingPrice.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.packedWeight.label_tag }}
+        {{ form.packedWeight|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.packedWeight.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.packedHeight.label_tag }}
+        {{ form.packedHeight|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.packedHeight.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.packedWidth.label_tag }}
+        {{ form.packedWidth|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.packedWidth.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.packedDepth.label_tag }}
+        {{ form.packedDepth|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+        {% for error in form.packedDepth.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div>
+        {{ form.refrigerated.label_tag }}
+        {{ form.refrigerated|add_class:'form-checkbox h-5 w-5 text-blue-600 ml-2' }}
+        {% for error in form.refrigerated.errors %}
+          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="w-1/2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition">Save</button>
+        <a href="{% url 'product_list' %}" class="w-1/2 py-2 px-4 bg-gray-400 hover:bg-gray-500 text-white font-semibold rounded text-center transition">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

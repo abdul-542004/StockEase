@@ -2,23 +2,42 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count, Sum, F
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User
-from .forms import UserForm, UserUpdateForm
+from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User, Customer, Supplier, Warehouse
+from .forms import UserForm, UserUpdateForm, CustomerForm, SupplierForm, CategoryForm, WarehouseForm, ProductForm
 from datetime import date, datetime
 import calendar
 import json
-
+from django.contrib.auth import logout, login, authenticate
+from django import forms
 
 def is_admin(user):
     return user.is_authenticated and user.role == 'administrator'
 
+def login_view(request):
+    """Login view"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, 'You have been logged in successfully.')
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    return render(request, 'core/login.html')
+
+def logout_view(request):
+    """Logout view"""
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('login')
 
 @login_required
 @user_passes_test(is_admin)
 def user_list(request):
     users = User.objects.all()
     return render(request, 'core/user_list.html', {'users': users})
-
 
 @login_required
 @user_passes_test(is_admin)
@@ -32,7 +51,6 @@ def user_create(request):
     else:
         form = UserForm()
     return render(request, 'core/user_form.html', {'form': form, 'title': 'Add User'})
-
 
 @login_required
 @user_passes_test(is_admin)
@@ -48,7 +66,6 @@ def user_update(request, pk):
         form = UserUpdateForm(instance=user)
     return render(request, 'core/user_form.html', {'form': form, 'title': 'Edit User'})
 
-
 @login_required
 @user_passes_test(is_admin)
 def user_delete(request, pk):
@@ -59,6 +76,226 @@ def user_delete(request, pk):
         return redirect('user_list')
     return render(request, 'core/user_confirm_delete.html', {'user': user})
 
+
+# --- Category CRUD Views ---
+@login_required
+@user_passes_test(is_admin)
+def category_list(request):
+    categories = Category.objects.all()
+    return render(request, 'core/category_list.html', {'categories': categories})
+
+@login_required
+@user_passes_test(is_admin)
+def category_create(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Category created successfully!')
+            return redirect('category_list')
+    else:
+        form = CategoryForm()
+    return render(request, 'core/category_form.html', {'form': form, 'title': 'Add Category'})
+
+@login_required
+@user_passes_test(is_admin)
+def category_update(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Category updated successfully!')
+            return redirect('category_list')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'core/category_form.html', {'form': form, 'title': 'Edit Category'})
+
+@login_required
+@user_passes_test(is_admin)
+def category_delete(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        category.delete()
+        messages.success(request, 'Category deleted successfully!')
+        return redirect('category_list')
+    return render(request, 'core/category_confirm_delete.html', {'category': category})
+
+# --- Warehouse CRUD Views ---
+@login_required
+@user_passes_test(is_admin)
+def warehouse_list(request):
+    warehouses = Warehouse.objects.select_related('location').all()
+    return render(request, 'core/warehouse_list.html', {'warehouses': warehouses})
+
+@login_required
+@user_passes_test(is_admin)
+def warehouse_create(request):
+    if request.method == 'POST':
+        form = WarehouseForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Warehouse created successfully!')
+            return redirect('warehouse_list')
+    else:
+        form = WarehouseForm()
+    return render(request, 'core/warehouse_form.html', {'form': form, 'title': 'Add Warehouse'})
+
+@login_required
+@user_passes_test(is_admin)
+def warehouse_update(request, pk):
+    warehouse = get_object_or_404(Warehouse, pk=pk)
+    if request.method == 'POST':
+        form = WarehouseForm(request.POST, instance=warehouse)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Warehouse updated successfully!')
+            return redirect('warehouse_list')
+    else:
+        form = WarehouseForm(instance=warehouse)
+    return render(request, 'core/warehouse_form.html', {'form': form, 'title': 'Edit Warehouse'})
+
+@login_required
+@user_passes_test(is_admin)
+def warehouse_delete(request, pk):
+    warehouse = get_object_or_404(Warehouse, pk=pk)
+    if request.method == 'POST':
+        warehouse.delete()
+        messages.success(request, 'Warehouse deleted successfully!')
+        return redirect('warehouse_list')
+    return render(request, 'core/warehouse_confirm_delete.html', {'warehouse': warehouse})
+
+# --- Product CRUD Views ---
+@login_required
+@user_passes_test(is_admin)
+def product_list(request):
+    products = Product.objects.select_related('category').all()
+    return render(request, 'core/product_list.html', {'products': products})
+
+@login_required
+@user_passes_test(is_admin)
+def product_create(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Product created successfully!')
+            return redirect('product_list')
+    else:
+        form = ProductForm()
+    return render(request, 'core/product_form.html', {'form': form, 'title': 'Add Product'})
+
+@login_required
+@user_passes_test(is_admin)
+def product_update(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Product updated successfully!')
+            return redirect('product_list')
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'core/product_form.html', {'form': form, 'title': 'Edit Product'})
+
+@login_required
+@user_passes_test(is_admin)
+def product_delete(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, 'Product deleted successfully!')
+        return redirect('product_list')
+    return render(request, 'core/product_confirm_delete.html', {'product': product})
+
+# --- Customer CRUD Views ---
+@login_required
+@user_passes_test(is_admin)
+def customer_list(request):
+    customers = Customer.objects.all()
+    return render(request, 'core/customer_list.html', {'customers': customers})
+
+@login_required
+@user_passes_test(is_admin)
+def customer_create(request):
+    if request.method == 'POST':
+        form = CustomerForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Customer created successfully!')
+            return redirect('customer_list')
+    else:
+        form = CustomerForm()
+    return render(request, 'core/customer_form.html', {'form': form, 'title': 'Add Customer'})
+
+@login_required
+@user_passes_test(is_admin)
+def customer_update(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    if request.method == 'POST':
+        form = CustomerForm(request.POST, instance=customer)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Customer updated successfully!')
+            return redirect('customer_list')
+    else:
+        form = CustomerForm(instance=customer)
+    return render(request, 'core/customer_form.html', {'form': form, 'title': 'Edit Customer'})
+
+@login_required
+@user_passes_test(is_admin)
+def customer_delete(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    if request.method == 'POST':
+        customer.delete()
+        messages.success(request, 'Customer deleted successfully!')
+        return redirect('customer_list')
+    return render(request, 'core/customer_confirm_delete.html', {'customer': customer})
+
+# --- Supplier CRUD Views ---
+@login_required
+@user_passes_test(is_admin)
+def supplier_list(request):
+    suppliers = Supplier.objects.all()
+    return render(request, 'core/supplier_list.html', {'suppliers': suppliers})
+
+@login_required
+@user_passes_test(is_admin)
+def supplier_create(request):
+    if request.method == 'POST':
+        form = SupplierForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Supplier created successfully!')
+            return redirect('supplier_list')
+    else:
+        form = SupplierForm()
+    return render(request, 'core/supplier_form.html', {'form': form, 'title': 'Add Supplier'})
+
+@login_required
+@user_passes_test(is_admin)
+def supplier_update(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    if request.method == 'POST':
+        form = SupplierForm(request.POST, instance=supplier)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Supplier updated successfully!')
+            return redirect('supplier_list')
+    else:
+        form = SupplierForm(instance=supplier)
+    return render(request, 'core/supplier_form.html', {'form': form, 'title': 'Edit Supplier'})
+
+@login_required
+@user_passes_test(is_admin)
+def supplier_delete(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    if request.method == 'POST':
+        supplier.delete()
+        messages.success(request, 'Supplier deleted successfully!')
+        return redirect('supplier_list')
+    return render(request, 'core/supplier_confirm_delete.html', {'supplier': supplier})
 
 def dashboard(request):
     """Dashboard view showing key metrics and visualizations"""
