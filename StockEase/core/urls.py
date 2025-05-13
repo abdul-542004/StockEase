@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
 
     # User Management URLs
@@ -41,4 +42,10 @@ urlpatterns = [
     path('products/add/', views.product_create, name='product_create'),
     path('products/<int:pk>/edit/', views.product_update, name='product_update'),
     path('products/<int:pk>/delete/', views.product_delete, name='product_delete'),
+
+    # Location Management URLs
+    path('locations/', views.location_list, name='location_list'),
+    path('locations/add/', views.location_create, name='location_create'),
+    path('locations/<int:pk>/edit/', views.location_update, name='location_update'),
+    path('locations/<int:pk>/delete/', views.location_delete, name='location_delete'),
 ]

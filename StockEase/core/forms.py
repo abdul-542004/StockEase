@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import User, Customer, Supplier, Category, Warehouse, Product
-
+from .models import *
 
 
 # --- User Forms ---
@@ -118,6 +117,18 @@ class CategoryForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400', 'placeholder': 'Category Title'}),
             'description': forms.Textarea(attrs={'class': 'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400', 'placeholder': 'Description', 'rows': 3}),
         }
+
+
+# --- Location Form ---
+class LocationForm(forms.ModelForm):
+    class Meta:
+        model = Location
+        fields = ['name', 'address']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400', 'placeholder': 'Location Name'}),
+            'address': forms.Textarea(attrs={'class': 'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400', 'placeholder': 'Address', 'rows': 3}),
+        }
+
 
 # --- Warehouse Form ---
 class WarehouseForm(forms.ModelForm):

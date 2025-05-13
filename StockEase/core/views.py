@@ -2,13 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count, Sum, F
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User, Customer, Supplier, Warehouse
-from .forms import UserForm, UserUpdateForm, CustomerForm, SupplierForm, CategoryForm, WarehouseForm, ProductForm
+from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User, Customer, Supplier, Warehouse, Location
+from .forms import *
+from django import forms
 from datetime import date, datetime
 import calendar
 import json
 from django.contrib.auth import logout, login, authenticate
-from django import forms
 
 def is_admin(user):
     return user.is_authenticated and user.role == 'administrator'
@@ -296,6 +296,52 @@ def supplier_delete(request, pk):
         messages.success(request, 'Supplier deleted successfully!')
         return redirect('supplier_list')
     return render(request, 'core/supplier_confirm_delete.html', {'supplier': supplier})
+
+
+
+# --- Location CRUD Views ---
+@login_required
+@user_passes_test(is_admin)
+def location_list(request):
+    locations = Location.objects.all()
+    return render(request, 'core/location_list.html', {'locations': locations})
+
+@login_required
+@user_passes_test(is_admin)
+def location_create(request):
+    if request.method == 'POST':
+        form = LocationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Location created successfully!')
+            return redirect('location_list')
+    else:
+        form = LocationForm()
+    return render(request, 'core/location_form.html', {'form': form, 'title': 'Add Location'})
+
+@login_required
+@user_passes_test(is_admin)
+def location_update(request, pk):
+    location = get_object_or_404(Location, pk=pk)
+    if request.method == 'POST':
+        form = LocationForm(request.POST, instance=location)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Location updated successfully!')
+            return redirect('location_list')
+    else:
+        form = LocationForm(instance=location)
+    return render(request, 'core/location_form.html', {'form': form, 'title': 'Edit Location'})
+
+@login_required
+@user_passes_test(is_admin)
+def location_delete(request, pk):
+    location = get_object_or_404(Location, pk=pk)
+    if request.method == 'POST':
+        location.delete()
+        messages.success(request, 'Location deleted successfully!')
+        return redirect('location_list')
+    return render(request, 'core/location_confirm_delete.html', {'location': location})
 
 def dashboard(request):
     """Dashboard view showing key metrics and visualizations"""
