@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StockEase{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-700">
+                <h1 class="text-2xl font-semibold">StockEase</h1>
+            </div>
+            <nav class="flex-1 px-4 py-4 space-y-2">
+                <a href="/dashboard/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                    <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+                </a>
+                {% if user.is_authenticated %}
+                    {% if user.role == 'administrator' %}
+                        <a href="/users/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-users mr-3"></i> Users
+                        </a>
+                        <a href="/customers/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-user-friends mr-3"></i> Customers
+                        </a>
+                        <a href="/suppliers/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-handshake mr-3"></i> Suppliers
+                        </a>
+                        <a href="/categories/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-th-list mr-3"></i> Categories
+                        </a>
+                        <a href="/products/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-box-open mr-3"></i> Products
+                        </a>
+                        <a href="/inventory/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-warehouse mr-3"></i> Inventory
+                        </a>
+                        <a href="/warehouses/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-industry mr-3"></i> Warehouses
+                        </a>
+                        <a href="/sales-orders/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-shopping-cart mr-3"></i> Sales Order
+                        </a>
+                        <a href="/purchase-orders/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-truck-loading mr-3"></i> Purchase Order
+                        </a>
+                        <a href="/reports/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-chart-bar mr-3"></i> Reports
+                        </a>
+                    {% elif user.role == 'inventory_manager' %}
+                        <a href="/inventory/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-warehouse mr-3"></i> Inventory
+                        </a>
+                        <a href="/categories/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-th-list mr-3"></i> Categories
+                        </a>
+                        <a href="/products/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-box-open mr-3"></i> Products
+                        </a>
+                        <a href="/warehouses/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-industry mr-3"></i> Warehouses
+                        </a>
+                    {% elif user.role == 'salesperson' %}
+                        <a href="/sales-orders/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-shopping-cart mr-3"></i> Sales Order
+                        </a>
+                    {% elif user.role == 'purchasing_officer' %}
+                        <a href="/purchase-orders/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                            <i class="fas fa-truck-loading mr-3"></i> Purchase Order
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </nav>
+            <div class="px-6 py-4 border-t border-gray-700">
+                <a href="/logout/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                    <i class="fas fa-sign-out-alt mr-3"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                    <h2 class="text-xl font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h2>
+                </div>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                {% block content %}
+                <!-- Page content will go here -->
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,132 @@
+{% extends 'core/base.html' %}
+{% block title %}Dashboard | StockEase{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Filters -->
+    <form method="get" class="flex flex-wrap gap-4 mb-6 items-center">
+        <div>
+            <label for="month" class="block text-sm font-medium text-gray-700">Month</label>
+            <select name="month" id="month" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                {% for m in months %}
+                    <option value="{{ m.number }}" {% if m.number == selected_month %}selected{% endif %}>{{ m.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="year" class="block text-sm font-medium text-gray-700">Year</label>
+            <select name="year" id="year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                {% for y in years %}
+                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="self-end">
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">Apply</button>
+        </div>
+    </form>
+
+    <!-- Top Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Sales Activity -->
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+            <div class="text-3xl font-bold text-indigo-600">{{ sales_pending }}</div>
+            <div class="text-gray-500">Pending Sales Orders</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+            <div class="text-3xl font-bold text-green-600">{{ sales_delivered }}</div>
+            <div class="text-gray-500">Delivered Sales Orders</div>
+        </div>
+        <!-- Inventory Summary -->
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+            <div class="text-3xl font-bold text-blue-600">{{ total_inventory }}</div>
+            <div class="text-gray-500">Quantity in Hand</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+            <div class="text-3xl font-bold text-yellow-600">{{ to_be_received }}</div>
+            <div class="text-gray-500">To Be Received</div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Category Pie Chart -->
+        <div class="bg-white rounded-lg shadow p-6 col-span-1 flex flex-col">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700">Category Distribution</h3>
+            <canvas id="categoryPieChart" height="220"></canvas>
+            <div class="mt-4">
+                <ul>
+                    {% for cat in category_distribution %}
+                        <li class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>{{ cat.title }}</span>
+                            <span>{{ cat.product_count }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Inventory Low Stock Items -->
+        <div class="bg-white rounded-lg shadow p-6 col-span-1 flex flex-col">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700">Low Stock Items</h3>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                        <th class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
+                        <th class="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
+                        <th class="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase">Min</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for item in low_stock_items %}
+                        <tr>
+                            <td class="px-2 py-1 text-sm text-gray-700">{{ item.product.name }}</td>
+                            <td class="px-2 py-1 text-sm text-gray-700">{{ item.warehouse.name }}</td>
+                            <td class="px-2 py-1 text-sm text-right text-blue-600">{{ item.quantityAvailable }}</td>
+                            <td class="px-2 py-1 text-sm text-right text-red-600">{{ item.minimumStockLevel }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center text-gray-400 py-4">No low stock items</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Purchase Order Summary -->
+        <div class="bg-white rounded-lg shadow p-6 col-span-1 flex flex-col">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700">Purchase Order Summary ({{ month_name }} {{ year }})</h3>
+            <div class="flex flex-col gap-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Quantity Ordered</span>
+                    <span class="font-bold text-indigo-600">{{ po_quantity }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Total Cost</span>
+                    <span class="font-bold text-green-600">PKR {{ po_cost|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Order Graph -->
+    <div class="bg-white rounded-lg shadow p-6 mt-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-700">Sales Order Graph ({{ month_name }} {{ year }})</h3>
+        <canvas id="salesOrderGraph" height="80"></canvas>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="/static/js/dashboard.js"></script>
+<script>
+window.dashboardData = {
+    categories: JSON.parse('{{ categories_json|escapejs }}'),
+    categoryCounts: JSON.parse('{{ category_counts_json|escapejs }}'),
+    salesDates: JSON.parse('{{ sales_dates_json|escapejs }}'),
+    salesAmounts: JSON.parse('{{ sales_amounts_json|escapejs }}')
+};
+</script>
+{% endblock %}
