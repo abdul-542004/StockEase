@@ -1,9 +1,63 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count, Sum, F
-from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User
+from .forms import UserForm, UserUpdateForm
 from datetime import date, datetime
 import calendar
 import json
+
+
+def is_admin(user):
+    return user.is_authenticated and user.role == 'administrator'
+
+
+@login_required
+@user_passes_test(is_admin)
+def user_list(request):
+    users = User.objects.all()
+    return render(request, 'core/user_list.html', {'users': users})
+
+
+@login_required
+@user_passes_test(is_admin)
+def user_create(request):
+    if request.method == 'POST':
+        form = UserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User created successfully!')
+            return redirect('user_list')
+    else:
+        form = UserForm()
+    return render(request, 'core/user_form.html', {'form': form, 'title': 'Add User'})
+
+
+@login_required
+@user_passes_test(is_admin)
+def user_update(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User updated successfully!')
+            return redirect('user_list')
+    else:
+        form = UserUpdateForm(instance=user)
+    return render(request, 'core/user_form.html', {'form': form, 'title': 'Edit User'})
+
+
+@login_required
+@user_passes_test(is_admin)
+def user_delete(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, 'User deleted successfully!')
+        return redirect('user_list')
+    return render(request, 'core/user_confirm_delete.html', {'user': user})
 
 
 def dashboard(request):

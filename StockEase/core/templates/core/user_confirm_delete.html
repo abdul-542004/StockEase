@@ -1,0 +1,16 @@
+{% extends 'core/base.html' %}
+{% block title %}Delete User | StockEase{% endblock %}
+{% block page_title %}Delete User{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow">
+    <h2 class="text-xl font-semibold mb-4">Delete User</h2>
+    <p class="mb-6">Are you sure you want to delete user <span class="font-bold">{{ user.username }}</span>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="flex justify-end">
+            <a href="{% url 'user_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded mr-2">Cancel</a>
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Delete</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

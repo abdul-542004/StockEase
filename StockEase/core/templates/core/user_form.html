@@ -1,0 +1,139 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="user-form-container">
+    <h2 class="form-title">Create New User</h2>
+    <form id="user-form" method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+            {% for error in form.username.errors %}
+                <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {% for error in form.email.errors %}
+                <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.first_name.label_tag }}
+            {{ form.first_name }}
+            {% for error in form.first_name.errors %}
+                <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.last_name.label_tag }}
+            {{ form.last_name }}
+            {% for error in form.last_name.errors %}
+                <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.role.label_tag }}
+            {{ form.role }}
+            {% for error in form.role.errors %}
+                <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.password1.label_tag }}
+            {{ form.password1 }}
+            <div class="password-help" style="display:none;">
+                <small>Password must be at least 8 characters, not entirely numeric, and not too common.</small>
+            </div>
+            {% for error in form.password1.errors %}
+                <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.password2.label_tag }}
+            {{ form.password2 }}
+            <div class="password-help" style="display:none;">
+                <small>Enter the same password as before, for verification.</small>
+            </div>
+            {% for error in form.password2.errors %}
+                <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-group-btns" style="display: flex; gap: 10px;">
+            <button type="submit" class="btn-submit" style="flex:1;">Create User</button>
+            <a href="{% url 'user_list' %}" class="btn-submit" style="flex:1; background-color: #718096;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+.user-form-container {
+    max-width: 450px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    padding: 32px 28px 24px 28px;
+}
+.form-title {
+    text-align: center;
+    margin-bottom: 24px;
+    color: #2d3748;
+    font-weight: 600;
+    font-size: 1.6rem;
+}
+.form-group {
+    margin-bottom: 18px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #4a5568;
+    font-weight: 500;
+}
+.form-input, .form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    font-size: 1rem;
+    background: #f9fafb;
+    transition: border 0.2s;
+}
+.form-input:focus, .form-select:focus {
+    border-color: #3182ce;
+    outline: none;
+    background: #fff;
+}
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: #3182ce;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+.btn-submit:hover {
+    background: #2563eb;
+}
+.form-error {
+    color: #e53e3e;
+    font-size: 0.95em;
+    margin-top: 2px;
+}
+.password-help {
+    color: #718096;
+    font-size: 0.93em;
+    margin-top: 3px;
+}
+</style>
+<script src="{% static 'js/user_form.js' %}"></script>
+{% endblock %}
