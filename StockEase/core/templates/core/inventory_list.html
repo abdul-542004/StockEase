@@ -1,0 +1,65 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Inventory | StockEase{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Inventory Overview</h2>
+      <form method="get" class="flex gap-2 w-full md:w-auto">
+        <select name="warehouse" id="warehouse-select" class="input input-bordered px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <option value="">All Warehouses</option>
+          {% for warehouse in warehouses %}
+            <option value="{{ warehouse.id }}" {% if selected_warehouse and warehouse.id == selected_warehouse.id %}selected{% endif %}>{{ warehouse.name }}</option>
+          {% endfor %}
+        </select>
+        <input type="text" name="q" value="{{ query }}" placeholder="Search product..." class="input input-bordered px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition">Filter</button>
+      </form>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+            {% if not selected_warehouse %}
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
+            {% endif %}
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Min Stock</th>
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Max Stock</th>
+            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+          {% for item in inventory_list %}
+          <tr>
+            <td class="px-4 py-2 {% if item.quantityAvailable < item.minimumStockLevel %}text-red-600 font-bold{% endif %}">{{ item.product.name }}</td>
+            {% if not selected_warehouse %}
+            <td class="px-4 py-2">{{ item.warehouse.name }}</td>
+            {% endif %}
+            <td class="px-4 py-2 text-right {% if item.quantityAvailable <= item.minimumStockLevel %}text-red-600 font-bold{% endif %}">{{ item.quantityAvailable }}</td>
+            <td class="px-4 py-2 text-right">{{ item.minimumStockLevel }}</td>
+            <td class="px-4 py-2 text-right">{{ item.maximumStockLevel }}</td>
+            <td class="px-4 py-2 text-center">
+              {% if item.quantityAvailable < item.minimumStockLevel %}
+                <span class="inline-block px-2 py-1 text-xs font-semibold rounded bg-red-100 text-red-700">REORDER</span>
+              {% elif item.quantityAvailable > item.maximumStockLevel %}
+                <span class="inline-block px-2 py-1 text-xs font-semibold rounded bg-yellow-100 text-yellow-700">OVERSTOCKED</span>
+              {% else %}
+                <span class="inline-block px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">NORMAL</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center py-4 text-gray-500">No inventory found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/inventory.js' %}"></script>
+{% endblock %}

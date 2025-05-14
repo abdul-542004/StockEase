@@ -1,33 +1,38 @@
-{% extends 'core/base.html' %}
-{% load static %}
-{% load widget_tweaks %}
-
-
-{% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gray-100">
-  <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Login</h2>
-    <form method="post" class="space-y-5" novalidate>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | StockEase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-10">
+    <div class="flex flex-col items-center mb-8">
+      <img src="https://img.icons8.com/ios-filled/100/4F46E5/warehouse.png" alt="StockEase Logo" class="w-16 h-16 mb-2">
+      <h2 class="text-3xl font-extrabold text-gray-800 mb-2">StockEase</h2>
+      <p class="text-gray-500 text-sm">Inventory Management System</p>
+    </div>
+    {% if messages %}
+      <ul class="mb-4">
+        {% for message in messages %}
+          <li class="text-{{ message.tags }}-600">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <form method="post" class="space-y-6">
       {% csrf_token %}
-      {% if form.non_field_errors %}
-        <div class="text-red-600 text-center text-sm mb-2">{{ form.non_field_errors }}</div>
-      {% endif %}
       <div>
-        {{ form.username.label_tag }}
-        {{ form.username|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
-        {% for error in form.username.errors %}
-          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
-        {% endfor %}
+        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+        <input id="username" name="username" type="text" required autofocus class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none" placeholder="Enter your username">
       </div>
       <div>
-        {{ form.password.label_tag }}
-        {{ form.password|add_class:'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400' }}
-        {% for error in form.password.errors %}
-          <div class="text-red-500 text-xs mt-1">{{ error }}</div>
-        {% endfor %}
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <input id="password" name="password" type="password" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none" placeholder="Enter your password">
       </div>
-      <button type="submit" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition">Login</button>
+      <button type="submit" class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow transition">Sign In</button>
     </form>
   </div>
-</div>
-{% endblock %}
+</body>
+</html>

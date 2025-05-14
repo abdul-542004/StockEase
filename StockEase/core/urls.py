@@ -48,4 +48,7 @@ urlpatterns = [
     path('locations/add/', views.location_create, name='location_create'),
     path('locations/<int:pk>/edit/', views.location_update, name='location_update'),
     path('locations/<int:pk>/delete/', views.location_delete, name='location_delete'),
+
+    # Inventory URLs
+    path('inventory/', views.inventory_list, name='inventory_list'),
 ]

@@ -207,7 +207,7 @@ def product_delete(request, pk):
         product.delete()
         messages.success(request, 'Product deleted successfully!')
         return redirect('product_list')
-    return render(request, 'core/product_confirm_delete.html', {'product': product})
+    return render(request, 'core/entity_confirm_delete.html', {'product': product})
 
 # --- Customer CRUD Views ---
 @login_required
@@ -342,6 +342,33 @@ def location_delete(request, pk):
         messages.success(request, 'Location deleted successfully!')
         return redirect('location_list')
     return render(request, 'core/location_confirm_delete.html', {'location': location})
+
+@login_required
+@user_passes_test(is_admin)
+def inventory_list(request):
+    warehouses = Warehouse.objects.all()
+    selected_warehouse = None
+    query = request.GET.get('q', '').strip()
+    warehouse_id = request.GET.get('warehouse', '')
+
+    inventory_qs = Inventory.objects.select_related('product', 'warehouse')
+    if warehouse_id:
+        try:
+            selected_warehouse = Warehouse.objects.get(id=warehouse_id)
+            inventory_qs = inventory_qs.filter(warehouse=selected_warehouse)
+        except Warehouse.DoesNotExist:
+            selected_warehouse = None
+    if query:
+        inventory_qs = inventory_qs.filter(product__name__icontains=query)
+    inventory_qs = inventory_qs.order_by('warehouse__name', 'product__name')
+
+    context = {
+        'warehouses': warehouses,
+        'selected_warehouse': selected_warehouse,
+        'inventory_list': inventory_qs,
+        'query': query,
+    }
+    return render(request, 'core/inventory_list.html', context)
 
 def dashboard(request):
     """Dashboard view showing key metrics and visualizations"""
