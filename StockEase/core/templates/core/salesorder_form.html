@@ -1,0 +1,281 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}{{ title }} | StockEase{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8">
+    <div class="flex items-center justify-between gap-4 mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">{{ title }}</h2>
+      {% if order %}
+      <a href="{% url 'salesorder_detail' order.id %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded transition">Back to Detail</a>
+      {% else %}
+      <a href="{% url 'salesorder_list' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded transition">Back to List</a>
+      {% endif %}
+    </div>
+
+    <form method="post" id="salesorder-form">
+      {% csrf_token %}
+      
+      <!-- Order Information Section -->
+      <div class="bg-blue-100 p-4 rounded-md mb-6">
+        <h3 class="text-lg font-semibold mb-4 text-blue-800">Order Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="{{ form.customer.id_for_label }}">Customer:</label>
+            {{ form.customer }}
+            {% if form.customer.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.customer.errors }}</p>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="{{ form.date.id_for_label }}">Date:</label>
+            {{ form.date }}
+            {% if form.date.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.date.errors }}</p>
+            {% endif %}
+            <p class="text-xs text-gray-500 mt-1">Note: You are 5 hours ahead of server time.</p>
+          </div>
+          <div class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="{{ form.status.id_for_label }}">Status:</label>
+            {{ form.status }}
+            {% if form.status.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.status.errors }}</p>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="{{ form.paymentType.id_for_label }}">Payment Type:</label>
+            {{ form.paymentType }}
+            {% if form.paymentType.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.paymentType.errors }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary Section -->
+      <div class="bg-gray-100 p-4 rounded-md mb-6">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Order Summary</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Total Price:</label>
+            <input type="text" class="input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" readonly value="{{ order.totalPrice|default:'0.00' }}" id="totalPrice">
+          </div>
+          <div class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Total Items:</label>
+            <input type="text" class="input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" readonly value="{{ order.totalItems|default:'0' }}" id="totalItems">
+          </div>
+          {% if order %}
+          <div class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Created By:</label>
+            <input type="text" class="input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" readonly value="{{ order.createdBy }}">
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Sales Items Section -->
+      <div class="bg-blue-50 p-4 rounded-md mb-6">
+        <h3 class="text-lg font-semibold mb-4 text-blue-800">SALES ITEMS</h3>
+        {{ formset.management_form }}
+        <div class="overflow-x-auto">
+          <table class="w-full mb-4">
+            <thead>
+              <tr class="bg-blue-100">
+                <th class="px-3 py-2 text-left">PRODUCT</th>
+                <th class="px-3 py-2 text-left">QUANTITY</th>
+                <th class="px-3 py-2 text-left">TOTAL AMOUNT</th>
+                <th class="px-3 py-2 text-left">WAREHOUSE</th>
+                <th class="px-3 py-2 text-center">DELETE?</th>
+              </tr>
+            </thead>
+            <tbody id="sales-items-container">
+              {% for form in formset.forms %}
+              <tr class="form-row {% cycle 'bg-white' 'bg-gray-50' %}">
+                <td class="p-2">
+                  {{ form.id }}
+                  {{ form.product }}
+                  {% if form.product.errors %}
+                  <p class="text-red-500 text-xs mt-1">{{ form.product.errors }}</p>
+                  {% endif %}
+                </td>
+                <td class="p-2">
+                  {{ form.quantity }}
+                  {% if form.quantity.errors %}
+                  <p class="text-red-500 text-xs mt-1">{{ form.quantity.errors }}</p>
+                  {% endif %}
+                </td>
+                <td class="p-2">
+                  {% if form.instance.id %}
+                  <input type="text" class="item-total input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ form.instance.totalAmount }}" readonly>
+                  {% else %}
+                  <input type="text" class="item-total input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" value="0.00" readonly>
+                  {% endif %}
+                </td>
+                <td class="p-2">
+                  {{ form.warehouse }}
+                  {% if form.warehouse.errors %}
+                  <p class="text-red-500 text-xs mt-1">{{ form.warehouse.errors }}</p>
+                  {% endif %}
+                </td>
+                <td class="p-2 text-center">
+                  {% if form.instance.pk %}
+                  <button type="button" class="btn-delete-item text-red-500 hover:text-red-700">
+                    <i class="fas fa-times-circle"></i>
+                  </button>
+                  {{ form.DELETE.as_hidden }}
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <button type="button" id="add-another-item" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded transition">
+          <i class="fas fa-plus-circle mr-1"></i> Add another Sales Item
+        </button>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex justify-between mt-8">
+        <a href="{% url 'salesorder_list' %}" class="px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded hover:bg-gray-100 transition">Cancel</a>
+        <div>
+          <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition">
+            {% if order %}Update{% else %}Save{% endif %} Sales Order
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/salesorder.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const addItemBtn = document.getElementById('add-another-item');
+    const itemsContainer = document.getElementById('sales-items-container');
+    const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+    
+    // Handle adding a new form
+    addItemBtn.addEventListener('click', function() {
+      const formCount = parseInt(totalForms.value);
+      const newForm = document.querySelector('.form-row').cloneNode(true);
+      
+      // Update form attributes with new index
+      newForm.querySelectorAll('input, select').forEach(function(input) {
+        if (input.id) {
+          input.id = input.id.replace('-0-', '-' + formCount + '-');
+        }
+        if (input.name) {
+          input.name = input.name.replace('-0-', '-' + formCount + '-');
+        }
+        
+        // Clear values for the new form
+        if (!input.classList.contains('item-total')) {
+          input.value = '';
+        } else {
+          input.value = '0.00';
+        }
+      });
+      
+      // Remove any DELETE checkbox for new items (they don't exist in DB yet)
+      const deleteBtn = newForm.querySelector('.btn-delete-item');
+      if (deleteBtn) {
+        deleteBtn.remove();
+      }
+      
+      // Add the new form to the container
+      itemsContainer.appendChild(newForm);
+      
+      // Update the total form count
+      totalForms.value = formCount + 1;
+      
+      // Re-initialize event listeners for the new product select
+      initProductSelectEvents(newForm.querySelector('.product-select'));
+    });
+    
+    // Initialize all product selects on page load
+    document.querySelectorAll('.product-select').forEach(function(select) {
+      initProductSelectEvents(select);
+    });
+    
+    // Setup delete item buttons
+    document.querySelectorAll('.btn-delete-item').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const row = this.closest('.form-row');
+        const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        
+        if (deleteCheckbox) {
+          deleteCheckbox.checked = true;
+          row.style.backgroundColor = '#ffcccc';
+          row.style.textDecoration = 'line-through';
+        }
+      });
+    });
+    
+    // Function to handle product selection change
+    function initProductSelectEvents(productSelect) {
+      if (!productSelect) return;
+      
+      productSelect.addEventListener('change', function() {
+        const row = this.closest('.form-row');
+        const quantityInput = row.querySelector('input[name$="-quantity"]');
+        const warehouseSelect = row.querySelector('select[name$="-warehouse"]');
+        
+        // Clear and disable warehouse select until new options loaded
+        warehouseSelect.innerHTML = '<option value="">Loading warehouses...</option>';
+        warehouseSelect.disabled = true;
+        
+        // Get available warehouses for this product
+        if (this.value) {
+          const productId = this.value;
+          const quantity = quantityInput.value || 1;
+          
+          fetch(`/api/get-product-warehouses/?product_id=${productId}&quantity=${quantity}`)
+            .then(response => response.json())
+            .then(data => {
+              warehouseSelect.innerHTML = '';
+              
+              if (data.warehouses && data.warehouses.length > 0) {
+                // Add warehouses that have stock
+                data.warehouses.forEach(warehouse => {
+                  const option = document.createElement('option');
+                  option.value = warehouse.id;
+                  option.textContent = `${warehouse.name} (${warehouse.stock} available)`;
+                  warehouseSelect.appendChild(option);
+                });
+                warehouseSelect.disabled = false;
+              } else {
+                // No warehouses with stock
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No stock available';
+                warehouseSelect.appendChild(option);
+              }
+            })
+            .catch(error => {
+              console.error('Error loading warehouses:', error);
+              warehouseSelect.innerHTML = '<option value="">Error loading warehouses</option>';
+            });
+        } else {
+          // Reset warehouse select if no product selected
+          warehouseSelect.innerHTML = '<option value="">Select a product first</option>';
+        }
+      });
+      
+      // Handle quantity changes to update warehouse options
+      const quantityInput = productSelect.closest('.form-row').querySelector('input[name$="-quantity"]');
+      if (quantityInput) {
+        quantityInput.addEventListener('change', function() {
+          const productSelect = this.closest('.form-row').querySelector('.product-select');
+          if (productSelect.value) {
+            // Trigger product change event to refresh warehouse options
+            productSelect.dispatchEvent(new Event('change'));
+          }
+        });
+      }
+    }
+  });
+</script>
+{% endblock %}
