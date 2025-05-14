@@ -1,0 +1,181 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">{{ title }}</h1>
+
+    <form method="post" id="purchaseOrderForm">
+        {% csrf_token %}
+        
+        {{ form.management_form }}
+        {{ formset.management_form }}
+
+        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Order Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.date.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.deliveryDate.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Expected Delivery Date</label>
+                    {{ form.deliveryDate }}
+                    {% if form.deliveryDate.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.deliveryDate.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.supplier.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+                    {{ form.supplier }}
+                    {% if form.supplier.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.supplier.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.status.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.paymentStatus.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+                    {{ form.paymentStatus }}
+                    {% if form.paymentStatus.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.paymentStatus.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.paymentType.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
+                    {{ form.paymentType }}
+                    {% if form.paymentType.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.paymentType.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.deliveryWarehouse.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Delivery Warehouse</label>
+                    {{ form.deliveryWarehouse }}
+                    {% if form.deliveryWarehouse.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.deliveryWarehouse.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% if form.non_field_errors %}
+                <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {{ form.non_field_errors|join:", " }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Order Items</h2>
+            
+            <div id="item-forms-container">
+                {{ formset.management_form }}
+                {% for item_form in formset %}
+                <div class="item-form mb-6 p-4 border rounded {% if forloop.counter > 1 %}mt-4{% endif %}">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div class="md:col-span-2">
+                            <label for="{{ item_form.product.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                            {{ item_form.product }}
+                            {% if item_form.product.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ item_form.product.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ item_form.unitCostPrice.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Unit Cost ({{ CURRENCY_SYMBOL|default:'$' }})</label>
+                            {{ item_form.unitCostPrice }}
+                            {% if item_form.unitCostPrice.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ item_form.unitCostPrice.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ item_form.orderQuantity.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                            {{ item_form.orderQuantity }}
+                            {% if item_form.orderQuantity.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ item_form.orderQuantity.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="self-end">
+                            <button type="button" class="remove-item-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded shadow-sm text-xs">Remove</button>
+                        </div>
+                    </div>
+                     <div class="flex justify-end mt-2">
+                        {% if item_form.instance.pk and formset.can_delete %}
+                        <div class="mr-2">
+                             {{ item_form.DELETE.label_tag }} {{ item_form.DELETE }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if item_form.non_field_errors %}
+                        <div class="mt-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                            {{ item_form.non_field_errors|join:", " }}
+                        </div>
+                    {% endif %}
+                    {{ item_form.id }} {# Important for formset to correctly identify forms #}
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if formset.non_form_errors %}
+                <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {{ formset.non_form_errors|join:", " }}
+                </div>
+            {% endif %}
+
+            <button type="button" id="add-item-btn" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow-sm">
+                Add Another Item
+            </button>
+        </div>
+
+        <div class="mt-8 flex justify-end space-x-3">
+            <a href="{% if purchase_order %}{% url 'purchaseorder_detail' purchase_order.pk %}{% else %}{% url 'purchaseorder_list' %}{% endif %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded shadow-sm">
+                Cancel
+            </a>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow-sm">
+                Save Purchase Order
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="empty-form-template" style="display: none;">
+    {{ formset.empty_form.management_form }}
+    <div class="item-form mb-6 p-4 border rounded mt-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="md:col-span-2">
+                <label for="{{ formset.empty_form.product.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                {{ formset.empty_form.product }}
+            </div>
+            <div>
+                <label for="{{ formset.empty_form.unitCostPrice.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Unit Cost ({{ CURRENCY_SYMBOL|default:'$' }})</label>
+                {{ formset.empty_form.unitCostPrice }}
+            </div>
+            <div>
+                <label for="{{ formset.empty_form.orderQuantity.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                {{ formset.empty_form.orderQuantity }}
+            </div>
+            <div class="self-end">
+                <button type="button" class="remove-item-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded shadow-sm text-xs">Remove</button>
+            </div>
+        </div>
+        <div class="flex justify-end mt-2">
+            {% if formset.empty_form.instance.pk and formset.can_delete %}
+            <div class="mr-2">
+                 {{ formset.empty_form.DELETE.label_tag }} {{ formset.empty_form.DELETE }}
+            </div>
+            {% endif %}
+        </div>
+        {{ formset.empty_form.id }}
+    </div>
+</div>
+
+<script src="{% static 'js/purchaseorder_form.js'%}"></script>
+
+{% endblock %}

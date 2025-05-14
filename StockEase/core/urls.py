@@ -61,4 +61,8 @@ urlpatterns = [
     # Purchase Order URLs
     path('purchaseorders/', views.purchaseorder_list, name='purchaseorder_list'),
     path('purchaseorders/<int:pk>/', views.purchaseorder_detail, name='purchaseorder_detail'),
-]
+    path('purchaseorders/add/', views.purchaseorder_create, name='purchaseorder_create'),
+    path('purchaseorders/<int:pk>/edit/', views.purchaseorder_update, name='purchaseorder_update'),
+    
+    
+    ]

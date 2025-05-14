@@ -9,6 +9,9 @@ from datetime import date
 import calendar
 import json
 from django.contrib.auth import logout, login, authenticate
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import transaction
+from django.http import JsonResponse
 
 # Helper functions to check user roles
 
@@ -418,22 +421,129 @@ def salesorder_detail(request, pk):
 
 
 # --- Purchase Order CRUD Views ---
+
+
 @login_required
-@user_passes_test(is_admin)
 def purchaseorder_list(request):
-    orders = PurchaseOrder.objects.select_related('supplier', 'createdBy', 'deliveryWarehouse').order_by('-date', '-id')
-    return render(request, 'core/purchaseorder_list.html', {'orders': orders})
+    """Display a list of purchase orders with filtering options."""
+    queryset = PurchaseOrder.objects.all().order_by('-id')
+    
+    # Filter by status if provided
+    status = request.GET.get('status')
+    if status:
+        queryset = queryset.filter(status=status)
+        
+    # Search by supplier name if provided
+    search = request.GET.get('search')
+    if search:
+        queryset = queryset.filter(supplier__first_name__icontains=search)
+    
+    # Pagination
+    paginator = Paginator(queryset, 10)  # Show 10 orders per page
+    page = request.GET.get('page')
+    
+    try:
+        purchase_orders = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        purchase_orders = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page
+        purchase_orders = paginator.page(paginator.num_pages)
+    
+    context = {
+        'purchase_orders': purchase_orders,
+        'is_paginated': paginator.num_pages > 1,
+        'page_obj': purchase_orders,
+        'model': PurchaseOrder,  # To access model choices in template
+    }
+    
+    return render(request, 'core/purchaseorder_list.html', context)
 
 
+@login_required
 def purchaseorder_detail(request, pk):
-    order = get_object_or_404(PurchaseOrder, pk=pk)
-    items = order.purchaseitem_set.select_related('product').all()
-    return render(request, 'core/purchaseorder_detail.html', {
-        'order': order,
-        'items': items,
-    })
+    """Display detailed information about a specific purchase order."""
+    purchase_order = get_object_or_404(PurchaseOrder, pk=pk)
+    
+    # Process status change actions if submitted from the template
+    if request.method == 'POST' and 'status' in request.POST:
+        new_status = request.POST.get('status')
+        # Validate the status transition 
+        if new_status in dict(PurchaseOrder.STATUS_CHOICES):
+            purchase_order.status = new_status
+            purchase_order.save()
+            messages.success(request, f"Purchase order status updated to {purchase_order.get_status_display()}")
+            return redirect('core/purchaseorder_detail', pk=pk)
+    
+    context = {
+        'purchase_order': purchase_order,
+        'status_choices': PurchaseOrder.STATUS_CHOICES
+    }
+    
+    return render(request, 'core/purchaseorder_detail.html', context)
+
+
+@login_required
+def purchaseorder_create(request):
+    """Create a new purchase order and its items."""
+    if request.method == 'POST':
+        form = PurchaseOrderForm(request.POST, user=request.user)
+        formset = PurchaseItemFormSet(request.POST, prefix='items')
+        
+        if form.is_valid() and formset.is_valid():
+            with transaction.atomic():
+                purchase_order = form.save()
+                formset.instance = purchase_order
+                formset.save()
+                purchase_order.update_totals()  # Recalculate totals after items are saved
+            messages.success(request, 'Purchase order created successfully!')
+            return redirect('purchaseorder_detail', pk=purchase_order.pk)
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = PurchaseOrderForm(user=request.user, initial={'date': date.today()})
+        formset = PurchaseItemFormSet(prefix='items', queryset=PurchaseItem.objects.none())
+        
+    context = {
+        'form': form,
+        'formset': formset,
+        'title': 'Create Purchase Order'
+    }
+    return render(request, 'core/purchaseorder_form.html', context)
+
+@login_required
+def purchaseorder_update(request, pk):
+    """Update an existing purchase order and its items."""
+    purchase_order = get_object_or_404(PurchaseOrder, pk=pk)
+    
+    if request.method == 'POST':
+        form = PurchaseOrderForm(request.POST, instance=purchase_order, user=request.user)
+        formset = PurchaseItemFormSet(request.POST, instance=purchase_order, prefix='items')
+        
+        if form.is_valid() and formset.is_valid():
+            with transaction.atomic():
+                form.save()
+                formset.save()
+                purchase_order.update_totals()  # Recalculate totals after items are saved
+            messages.success(request, 'Purchase order updated successfully!')
+            return redirect('purchaseorder_detail', pk=purchase_order.pk)
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = PurchaseOrderForm(instance=purchase_order, user=request.user)
+        formset = PurchaseItemFormSet(instance=purchase_order, prefix='items')
+        
+    context = {
+        'form': form,
+        'formset': formset,
+        'purchase_order': purchase_order,
+        'title': 'Edit Purchase Order'
+    }
+    return render(request, 'core/purchaseorder_form.html', context)
 
 # --- Dashboard View ---
+
 def dashboard(request):
     """Dashboard view showing key metrics and visualizations"""
     

@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.forms import ModelForm, inlineformset_factory
 from .models import *
+from django.core.exceptions import ValidationError
 
 
 # --- User Forms ---
@@ -163,3 +164,92 @@ class ProductForm(forms.ModelForm):
         }
 
 
+class PurchaseOrderForm(forms.ModelForm):
+    """Form for creating and updating purchase orders."""
+    
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+            'date', 'deliveryDate', 'supplier', 'status', 
+            'paymentStatus', 'paymentType', 'deliveryWarehouse'
+        ]
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'deliveryDate': forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        date = cleaned_data.get('date')
+        delivery_date = cleaned_data.get('deliveryDate')
+        
+        if delivery_date and date and delivery_date < date:
+            raise ValidationError("Delivery date cannot be earlier than order date.")
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Set the user who created the purchase order
+        if not instance.pk and self.user:
+            instance.createdBy = self.user
+            
+        if commit:
+            instance.save()
+        
+        return instance
+
+
+class PurchaseItemForm(forms.ModelForm):
+    """Form for individual purchase items."""
+    
+    class Meta:
+        model = PurchaseItem
+        fields = ['product', 'unitCostPrice', 'orderQuantity']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['product'].queryset = Product.objects.all().order_by('name')
+        
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
+            
+        # When editing existing item, fetch current product price as default
+        if self.instance and self.instance.pk is None and 'product' in self.data:
+            try:
+                product_id = int(self.data.get('product'))
+                product = Product.objects.get(pk=product_id)
+                self.fields['unitCostPrice'].initial = product.averageCostPrice
+            except (ValueError, Product.DoesNotExist):
+                pass
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        quantity = cleaned_data.get('orderQuantity')
+        
+        if quantity is not None and quantity <= 0:
+            raise ValidationError("Order quantity must be greater than zero.")
+            
+        return cleaned_data
+
+
+# Create a formset for handling multiple purchase items
+
+
+PurchaseItemFormSet = inlineformset_factory(
+    PurchaseOrder,
+    PurchaseItem,
+    form=PurchaseItemForm,
+    extra=0,  # Show only one empty form
+    can_delete=True,
+    min_num=1,  # Require at least one item
+    validate_min=True,
+    max_num=30,  # Set a reasonable maximum
+)
