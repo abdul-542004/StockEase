@@ -417,6 +417,22 @@ def salesorder_detail(request, pk):
     return render(request, 'core/salesorder_detail.html', {'order': order})
 
 
+# --- Purchase Order CRUD Views ---
+@login_required
+@user_passes_test(is_admin)
+def purchaseorder_list(request):
+    orders = PurchaseOrder.objects.select_related('supplier', 'createdBy', 'deliveryWarehouse').order_by('-date', '-id')
+    return render(request, 'core/purchaseorder_list.html', {'orders': orders})
+
+
+def purchaseorder_detail(request, pk):
+    order = get_object_or_404(PurchaseOrder, pk=pk)
+    items = order.purchaseitem_set.select_related('product').all()
+    return render(request, 'core/purchaseorder_detail.html', {
+        'order': order,
+        'items': items,
+    })
+
 # --- Dashboard View ---
 def dashboard(request):
     """Dashboard view showing key metrics and visualizations"""

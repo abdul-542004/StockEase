@@ -56,4 +56,9 @@ urlpatterns = [
     # Sales Order URLs
     path('salesorders/', views.salesorder_list, name='salesorder_list'),
     path('salesorders/<int:pk>/', views.salesorder_detail, name='salesorder_detail'),
+
+
+    # Purchase Order URLs
+    path('purchaseorders/', views.purchaseorder_list, name='purchaseorder_list'),
+    path('purchaseorders/<int:pk>/', views.purchaseorder_detail, name='purchaseorder_detail'),
 ]

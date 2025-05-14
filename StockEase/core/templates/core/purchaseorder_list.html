@@ -1,0 +1,74 @@
+{% extends "core/base.html" %}
+{% block content %}
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Purchase Orders</h2>
+        <a href="#" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            <i class="fas fa-plus mr-2"></i>New Purchase Order
+        </a>
+    </div>
+    <div class="overflow-x-auto bg-white rounded shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Items</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Price</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Created By</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+                {% for order in orders %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">{{ order.id }}</td>
+                    <td class="px-4 py-2">{{ order.date|date:"Y-m-d" }}</td>
+                    <td class="px-4 py-2">{{ order.supplier.businessName }}</td>
+                    <td class="px-4 py-2">{% if order.deliveryWarehouse %}{{ order.deliveryWarehouse.name }}{% endif %}</td>
+                    <td class="px-4 py-2">
+                        <span class="px-2 py-1 rounded text-xs font-semibold
+                            {% if order.status == 'DRAFT' %}bg-gray-200 text-gray-800
+                            {% elif order.status == 'APPROVED' %}bg-blue-100 text-blue-800
+                            {% elif order.status == 'ORDERED' %}bg-yellow-100 text-yellow-800
+                            {% elif order.status == 'RECEIVED' %}bg-green-100 text-green-800
+                            {% elif order.status == 'CANCELLED' %}bg-red-100 text-red-800
+                            {% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2">
+                        <span class="px-2 py-1 rounded text-xs font-semibold
+                            {% if order.paymentStatus == 'PENDING' %}bg-yellow-100 text-yellow-800
+                            {% elif order.paymentStatus == 'PAID' %}bg-green-100 text-green-800
+                            {% endif %}">
+                            {{ order.get_paymentStatus_display }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2">{{ order.totalItems }}</td>
+                    <td class="px-4 py-2">{{ order.totalPrice|floatformat:2 }}</td>
+                    <td class="px-4 py-2">{{ order.createdBy.get_full_name|default:order.createdBy.username }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        <a href="{% url 'purchaseorder_detail' order.id%}" class="text-blue-600 hover:text-blue-900 mr-2" title="View">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-2" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center py-6 text-gray-400">No purchase orders found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
