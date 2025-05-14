@@ -8,7 +8,7 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b pb-4">
             <h2 class="text-2xl font-bold text-gray-800">Purchase Order #{{ purchase_order.id }}</h2>
             <div class="flex gap-2">
-                <a href="{% url 'purchaseorder_update' purchase_order.id %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition flex items-center gap-2">
+                <a href="{% url 'purchaseorder_edit' purchase_order.id %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition flex items-center gap-2" title="Edit Purchase Order">
                     <i class="fas fa-edit"></i> Edit
                 </a>
                 <a href="{% url 'purchaseorder_list' %}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded transition flex items-center gap-2">

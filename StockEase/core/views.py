@@ -12,6 +12,11 @@ from django.contrib.auth import logout, login, authenticate
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_http_methods
+
+import decimal
 
 # Helper functions to check user roles
 
@@ -485,62 +490,120 @@ def purchaseorder_detail(request, pk):
 
 
 @login_required
-def purchaseorder_create(request):
-    """Create a new purchase order and its items."""
-    if request.method == 'POST':
-        form = PurchaseOrderForm(request.POST, user=request.user)
-        formset = PurchaseItemFormSet(request.POST, prefix='items')
-        
-        if form.is_valid() and formset.is_valid():
-            with transaction.atomic():
-                purchase_order = form.save()
-                formset.instance = purchase_order
-                formset.save()
-                purchase_order.update_totals()  # Recalculate totals after items are saved
-            messages.success(request, 'Purchase order created successfully!')
-            return redirect('purchaseorder_detail', pk=purchase_order.pk)
-        else:
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = PurchaseOrderForm(user=request.user, initial={'date': date.today()})
-        formset = PurchaseItemFormSet(prefix='items', queryset=PurchaseItem.objects.none())
-        
+def purchaseorder_form(request, pk=None):
+    """Render the PurchaseOrder create or update form (AJAX-powered)."""
+    order = None
+    items = []
+    if pk:
+        order = get_object_or_404(PurchaseOrder, pk=pk)
+        items = list(order.purchaseitem_set.select_related('product').all())
+    suppliers = Supplier.objects.all()
+    warehouses = Warehouse.objects.all()
+    # Convert products to a list of dicts for JSON serialization
+    products = list(Product.objects.values('id', 'name'))
     context = {
-        'form': form,
-        'formset': formset,
-        'title': 'Create Purchase Order'
+        'order': order,
+        'items': items,
+        'suppliers': suppliers,
+        'warehouses': warehouses,
+        'products': products,
+        'status_choices': PurchaseOrder.STATUS_CHOICES,
+        'payment_choices': PurchaseOrder.PAYMENT_CHOICES,
+        'payment_status_choices': PurchaseOrder.PAYMENT_STATUS_CHOICES,
+        'today': date.today().isoformat(),
     }
     return render(request, 'core/purchaseorder_form.html', context)
 
+
+def parse_decimal(val):
+    try:
+        return decimal.Decimal(val)
+    except Exception:
+        return decimal.Decimal(0)
+
+@csrf_exempt
 @login_required
-def purchaseorder_update(request, pk):
-    """Update an existing purchase order and its items."""
-    purchase_order = get_object_or_404(PurchaseOrder, pk=pk)
-    
-    if request.method == 'POST':
-        form = PurchaseOrderForm(request.POST, instance=purchase_order, user=request.user)
-        formset = PurchaseItemFormSet(request.POST, instance=purchase_order, prefix='items')
-        
-        if form.is_valid() and formset.is_valid():
-            with transaction.atomic():
-                form.save()
-                formset.save()
-                purchase_order.update_totals()  # Recalculate totals after items are saved
-            messages.success(request, 'Purchase order updated successfully!')
-            return redirect('purchaseorder_detail', pk=purchase_order.pk)
-        else:
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = PurchaseOrderForm(instance=purchase_order, user=request.user)
-        formset = PurchaseItemFormSet(instance=purchase_order, prefix='items')
-        
-    context = {
-        'form': form,
-        'formset': formset,
-        'purchase_order': purchase_order,
-        'title': 'Edit Purchase Order'
-    }
-    return render(request, 'core/purchaseorder_form.html', context)
+@require_http_methods(["POST"])
+def purchaseorder_create_api(request):
+    """API endpoint to create a PurchaseOrder and its items via JSON."""
+    try:
+        data = json.loads(request.body)
+        order_data = data.get('order', {})
+        items_data = data.get('items', [])
+
+        # Validate required fields
+        required_fields = ['date', 'supplier', 'status', 'paymentStatus', 'paymentType', 'deliveryWarehouse']
+        for field in required_fields:
+            if not order_data.get(field):
+                return JsonResponse({'success': False, 'error': f'Missing field: {field}'}, status=400)
+
+        # Create PurchaseOrder
+        supplier = Supplier.objects.get(pk=order_data['supplier'])
+        warehouse = Warehouse.objects.get(pk=order_data['deliveryWarehouse'])
+        po = PurchaseOrder.objects.create(
+            date=order_data['date'],
+            deliveryDate=order_data.get('deliveryDate'),
+            supplier=supplier,
+            status=order_data['status'],
+            paymentStatus=order_data['paymentStatus'],
+            paymentType=order_data['paymentType'],
+            deliveryWarehouse=warehouse,
+            createdBy=request.user
+        )
+
+        # Create PurchaseItems
+        for item in items_data:
+            product = Product.objects.get(pk=item['product'])
+            PurchaseItem.objects.create(
+                purchaseOrder=po,
+                product=product,
+                unitCostPrice=parse_decimal(item['unitCostPrice']),
+                orderQuantity=int(item['orderQuantity'])
+            )
+        po.update_totals()
+        return JsonResponse({'success': True, 'order_id': po.id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["PUT"])
+def purchaseorder_update_api(request, pk):
+    """API endpoint to update a PurchaseOrder and its items via JSON."""
+    try:
+        po = PurchaseOrder.objects.get(pk=pk)
+        if po.status == 'RECEIVED':
+            # Prevent updates to delivered orders
+            return JsonResponse({'success': False, 'error': 'Cannot update a delivered order.'}, status=400)
+        data = json.loads(request.body)
+        order_data = data.get('order', {})
+        items_data = data.get('items', [])
+
+        # Update PurchaseOrder fields
+        for field in ['date', 'deliveryDate', 'status', 'paymentStatus', 'paymentType']:
+            if field in order_data:
+                setattr(po, field, order_data[field])
+        if 'supplier' in order_data:
+            po.supplier = Supplier.objects.get(pk=order_data['supplier'])
+        if 'deliveryWarehouse' in order_data:
+            po.deliveryWarehouse = Warehouse.objects.get(pk=order_data['deliveryWarehouse'])
+        po.save()
+
+        # Update PurchaseItems: remove all and recreate (simple approach)
+        po.purchaseitem_set.all().delete()
+        for item in items_data:
+            product = Product.objects.get(pk=item['product'])
+            PurchaseItem.objects.create(
+                purchaseOrder=po,
+                product=product,
+                unitCostPrice=parse_decimal(item['unitCostPrice']),
+                orderQuantity=int(item['orderQuantity'])
+            )
+        po.update_totals()
+        return JsonResponse({'success': True, 'order_id': po.id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
 
 # --- Dashboard View ---
 
@@ -596,7 +659,7 @@ def dashboard(request):
         total_items=Sum('totalItems')
     )['total_items'] or 0
     
-    po_cost = purchase_orders_month.aggregate(
+    po_cost = purchase_orders_month.filter(paymentStatus='PAID').aggregate(
         total_cost=Sum('totalPrice')
     )['total_cost'] or 0
     

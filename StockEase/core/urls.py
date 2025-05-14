@@ -57,12 +57,12 @@ urlpatterns = [
     path('salesorders/', views.salesorder_list, name='salesorder_list'),
     path('salesorders/<int:pk>/', views.salesorder_detail, name='salesorder_detail'),
 
-
     # Purchase Order URLs
     path('purchaseorders/', views.purchaseorder_list, name='purchaseorder_list'),
     path('purchaseorders/<int:pk>/', views.purchaseorder_detail, name='purchaseorder_detail'),
-    path('purchaseorders/add/', views.purchaseorder_create, name='purchaseorder_create'),
-    path('purchaseorders/<int:pk>/edit/', views.purchaseorder_update, name='purchaseorder_update'),
-    
-    
-    ]
+    path('purchaseorders/add/', views.purchaseorder_form, name='purchaseorder_add'),
+    path('purchaseorders/<int:pk>/edit/', views.purchaseorder_form, name='purchaseorder_edit'),
+    # AJAX API endpoints
+    path('purchaseorders/api/create/', views.purchaseorder_create_api, name='purchaseorder_create_api'),
+    path('purchaseorders/api/<int:pk>/update/', views.purchaseorder_update_api, name='purchaseorder_update_api'),
+]

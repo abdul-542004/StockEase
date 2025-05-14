@@ -1,72 +1,71 @@
-
 document.addEventListener('DOMContentLoaded', function () {
-    const addItemButton = document.getElementById('add-item-btn');
-    const formsContainer = document.getElementById('item-forms-container');
-    const emptyFormTemplate = document.getElementById('empty-form-template').innerHTML;
+    const formContainer = document.getElementById('item-forms-container');
+    const addBtn = document.getElementById('add-item-btn');
     const totalFormsInput = document.querySelector('input[name="items-TOTAL_FORMS"]');
-    const initialFormsInput = document.querySelector('input[name="items-INITIAL_FORMS"]'); // Keep track of initial forms
-    const maxFormsInput = document.querySelector('input[name="items-MAX_NUM_FORMS"]');
 
-    // Removed redundant formCount variable, will use totalFormsInput.value directly
+    // Function to add a new form
+    addBtn.addEventListener('click', function () {
+        const formCount = document.querySelectorAll('.item-form').length;
+        const template = document.getElementById('empty-form-template');
+        let newFormHTML = template.innerHTML.replace(/__prefix__/g, formCount);
 
-    addItemButton.addEventListener('click', function () {
-        let currentTotalForms = parseInt(totalFormsInput.value);
-        if (maxFormsInput && currentTotalForms >= parseInt(maxFormsInput.value)) {
-            alert("Maximum number of items reached.");
-            return;
-        }
-        
-        // New form gets index = currentTotalForms (e.g., if 1 form exists, index is 1 for the 2nd form)
-        let newFormHtml = emptyFormTemplate.replace(/__prefix__/g, currentTotalForms);
-        formsContainer.insertAdjacentHTML('beforeend', newFormHtml);
-        totalFormsInput.value = currentTotalForms + 1; // Increment TOTAL_FORMS
+        // Insert the new form
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newFormHTML;
+        const newForm = tempDiv.querySelector('.item-form');
+        formContainer.appendChild(newForm);
 
-        initializeRemoveButtons(); // Initialize remove buttons for the new form
+        // Update TOTAL_FORMS
+        totalFormsInput.value = formCount + 1;
+
+        // Bind remove button
+        bindRemoveButtons();
     });
 
-    function initializeRemoveButtons() {
-        formsContainer.querySelectorAll('.remove-item-btn').forEach(button => {
-            // Clone and replace to ensure only one event listener is attached
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
+    // Function to bind all remove buttons
+    function bindRemoveButtons() {
+        const removeButtons = document.querySelectorAll('.remove-item-btn');
+        removeButtons.forEach(button => {
+            button.removeEventListener('click', handleRemove); // Prevent double-binding
+            button.addEventListener('click', handleRemove);
+        });
+    }
 
-            newButton.addEventListener('click', function(event) {
-                event.preventDefault();
-                const formToRemove = newButton.closest('.item-form');
-                if (formToRemove) {
-                    const deleteInput = formToRemove.querySelector('input[type="checkbox"][name$="-DELETE"]');
-                    if (deleteInput) { // This is an existing form (has a DELETE checkbox)
-                        deleteInput.checked = true;
-                        formToRemove.style.display = 'none'; // Hide it
-                        // TOTAL_FORMS is not decremented here by JS; Django handles deletion of initial forms.
-                    } else { // This is a new form (added via JS, no DELETE checkbox yet)
-                        formToRemove.remove();
-                        
-                        // Decrement TOTAL_FORMS count
-                        totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+    // Function to handle removal of form
+    function handleRemove(event) {
+        const formItem = event.target.closest('.item-form');
+        formItem.remove();
 
-                        // Re-index all remaining forms to be sequential 0, 1, 2...
-                        let newIndex = 0;
-                        formsContainer.querySelectorAll('.item-form').forEach(itemForm => {
-                            // Update all form fields (inputs, selects, textareas) and labels within this itemForm
-                            itemForm.querySelectorAll('input, select, textarea, label').forEach(element => {
-                                // Update attributes that contain the form index
-                                ['name', 'id', 'for'].forEach(attrName => {
-                                    const attrValue = element.getAttribute(attrName);
-                                    if (attrValue) {
-                                        // Regex to find items-NUMBER- and replace NUMBER with newIndex
-                                        // Example: items-2-product -> items-0-product if newIndex is 0
-                                        element.setAttribute(attrName, attrValue.replace(/-(\d+)-/g, `-${newIndex}-`));
-                                    }
-                                });
-                            });
-                            newIndex++;
-                        });
-                    }
+        // Reindex all forms
+        reindexForms();
+    }
+
+    // Function to reindex all forms
+    function reindexForms() {
+        const forms = document.querySelectorAll('.item-form');
+        forms.forEach((form, index) => {
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if (input.name) {
+                    input.name = input.name.replace(/items-\d+/, `items-${index}`);
+                }
+                if (input.id) {
+                    input.id = input.id.replace(/items-\d+/, `items-${index}`);
+                }
+            });
+
+            const labels = form.querySelectorAll('label');
+            labels.forEach(label => {
+                if (label.htmlFor) {
+                    label.htmlFor = label.htmlFor.replace(/items-\d+/, `items-${index}`);
                 }
             });
         });
+
+        // Update TOTAL_FORMS
+        totalFormsInput.value = forms.length;
     }
-    
-    initializeRemoveButtons(); // Initialize for existing forms on page load
+
+    // Initial binding of remove buttons
+    bindRemoveButtons();
 });

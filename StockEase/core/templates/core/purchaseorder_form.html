@@ -1,181 +1,250 @@
 {% extends 'core/base.html' %}
-{% load static %}
-
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{% if order %}Edit{% else %}Create{% endif %} Purchase Order{% endblock %}
+{% block page_title %}{% if order %}Edit{% else %}Create{% endif %} Purchase Order{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ title }}</h1>
-
-    <form method="post" id="purchaseOrderForm">
-        {% csrf_token %}
-        
-        {{ form.management_form }}
-        {{ formset.management_form }}
-
-        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Order Details</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
-                    {{ form.date }}
-                    {% if form.date.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.date.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label for="{{ form.deliveryDate.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Expected Delivery Date</label>
-                    {{ form.deliveryDate }}
-                    {% if form.deliveryDate.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.deliveryDate.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label for="{{ form.supplier.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
-                    {{ form.supplier }}
-                    {% if form.supplier.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.supplier.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    {{ form.status }}
-                    {% if form.status.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.status.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label for="{{ form.paymentStatus.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
-                    {{ form.paymentStatus }}
-                    {% if form.paymentStatus.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.paymentStatus.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label for="{{ form.paymentType.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
-                    {{ form.paymentType }}
-                    {% if form.paymentType.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.paymentType.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label for="{{ form.deliveryWarehouse.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Delivery Warehouse</label>
-                    {{ form.deliveryWarehouse }}
-                    {% if form.deliveryWarehouse.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.deliveryWarehouse.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% if form.non_field_errors %}
-                <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                    {{ form.non_field_errors|join:", " }}
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Order Items</h2>
-            
-            <div id="item-forms-container">
-                {{ formset.management_form }}
-                {% for item_form in formset %}
-                <div class="item-form mb-6 p-4 border rounded {% if forloop.counter > 1 %}mt-4{% endif %}">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                        <div class="md:col-span-2">
-                            <label for="{{ item_form.product.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Product</label>
-                            {{ item_form.product }}
-                            {% if item_form.product.errors %}
-                                <p class="text-red-500 text-xs mt-1">{{ item_form.product.errors|join:", " }}</p>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <label for="{{ item_form.unitCostPrice.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Unit Cost ({{ CURRENCY_SYMBOL|default:'$' }})</label>
-                            {{ item_form.unitCostPrice }}
-                            {% if item_form.unitCostPrice.errors %}
-                                <p class="text-red-500 text-xs mt-1">{{ item_form.unitCostPrice.errors|join:", " }}</p>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <label for="{{ item_form.orderQuantity.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                            {{ item_form.orderQuantity }}
-                            {% if item_form.orderQuantity.errors %}
-                                <p class="text-red-500 text-xs mt-1">{{ item_form.orderQuantity.errors|join:", " }}</p>
-                            {% endif %}
-                        </div>
-                        <div class="self-end">
-                            <button type="button" class="remove-item-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded shadow-sm text-xs">Remove</button>
-                        </div>
-                    </div>
-                     <div class="flex justify-end mt-2">
-                        {% if item_form.instance.pk and formset.can_delete %}
-                        <div class="mr-2">
-                             {{ item_form.DELETE.label_tag }} {{ item_form.DELETE }}
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% if item_form.non_field_errors %}
-                        <div class="mt-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
-                            {{ item_form.non_field_errors|join:", " }}
-                        </div>
-                    {% endif %}
-                    {{ item_form.id }} {# Important for formset to correctly identify forms #}
-                </div>
-                {% endfor %}
-            </div>
-            
-            {% if formset.non_form_errors %}
-                <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                    {{ formset.non_form_errors|join:", " }}
-                </div>
-            {% endif %}
-
-            <button type="button" id="add-item-btn" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow-sm">
-                Add Another Item
-            </button>
-        </div>
-
-        <div class="mt-8 flex justify-end space-x-3">
-            <a href="{% if purchase_order %}{% url 'purchaseorder_detail' purchase_order.pk %}{% else %}{% url 'purchaseorder_list' %}{% endif %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded shadow-sm">
-                Cancel
-            </a>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow-sm">
-                Save Purchase Order
-            </button>
-        </div>
-    </form>
-</div>
-
-<div id="empty-form-template" style="display: none;">
-    {{ formset.empty_form.management_form }}
-    <div class="item-form mb-6 p-4 border rounded mt-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div class="md:col-span-2">
-                <label for="{{ formset.empty_form.product.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Product</label>
-                {{ formset.empty_form.product }}
-            </div>
-            <div>
-                <label for="{{ formset.empty_form.unitCostPrice.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Unit Cost ({{ CURRENCY_SYMBOL|default:'$' }})</label>
-                {{ formset.empty_form.unitCostPrice }}
-            </div>
-            <div>
-                <label for="{{ formset.empty_form.orderQuantity.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                {{ formset.empty_form.orderQuantity }}
-            </div>
-            <div class="self-end">
-                <button type="button" class="remove-item-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded shadow-sm text-xs">Remove</button>
-            </div>
-        </div>
-        <div class="flex justify-end mt-2">
-            {% if formset.empty_form.instance.pk and formset.can_delete %}
-            <div class="mr-2">
-                 {{ formset.empty_form.DELETE.label_tag }} {{ formset.empty_form.DELETE }}
-            </div>
-            {% endif %}
-        </div>
-        {{ formset.empty_form.id }}
+<div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 sm:p-12 mt-8 border border-gray-200">
+  <form id="purchaseorder-form" class="space-y-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+      <div>
+        <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
+        <input type="date" name="date" id="date" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" value="{{ order.date|default:today }}" required>
+      </div>
+      <div>
+        <label for="deliveryDate" class="block text-sm font-medium text-gray-700 mb-1">Delivery Date (Optional)</label>
+        <input type="date" name="deliveryDate" id="deliveryDate" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" value="{% if order and order.deliveryDate %}{{ order.deliveryDate|date:'Y-m-d' }}{% else %}{% endif %}">
+      </div>
+      <div>
+        <label for="supplier" class="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+        <select name="supplier" id="supplier" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" required>
+          <option value="">Select supplier</option>
+          {% for s in suppliers %}
+            <option value="{{ s.id }}" {% if order and order.supplier_id == s.id %}selected{% endif %}>{{ s.businessName }} ({{ s.first_name }} {{ s.last_name }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="deliveryWarehouse" class="block text-sm font-medium text-gray-700 mb-1">Warehouse</label>
+        <select name="deliveryWarehouse" id="deliveryWarehouse" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" required>
+          <option value="">Select warehouse</option>
+          {% for w in warehouses %}
+            <option value="{{ w.id }}" {% if order and order.deliveryWarehouse_id == w.id %}selected{% endif %}>{{ w.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select name="status" id="status" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" required>
+          {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if order and order.status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="paymentStatus" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+        <select name="paymentStatus" id="paymentStatus" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" required>
+          {% for val, label in payment_status_choices %}
+            <option value="{{ val }}" {% if order and order.paymentStatus == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="md:col-span-2">
+        <label for="paymentType" class="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
+        <select name="paymentType" id="paymentType" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" required>
+          {% for val, label in payment_choices %}
+            <option value="{{ val }}" {% if order and order.paymentType == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
+
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-6 flex items-center">
+        <svg class="h-6 w-6 text-indigo-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-17.25 4.5v-1.875a3.375 3.375 0 003.375-3.375h1.5a1.125 1.125 0 011.125 1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375m15.75 0v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h1.5a3.375 3.375 0 003.375-3.375V9.75M9 11.25v-1.5c0-.621-.504-1.125-1.125-1.125H6.375M15 11.25v-1.5c0-.621.504-1.125 1.125-1.125h1.5m-7.5 0V9.75M3 12h18M3 12V6.75A2.25 2.25 0 015.25 4.5h13.5A2.25 2.25 0 0121 6.75V12m-18 0v2.25A2.25 2.25 0 005.25 16.5h13.5A2.25 2.25 0 0021 14.25V12" />
+        </svg>
+        Order Items
+      </h3>
+      <div class="overflow-x-auto rounded-lg border border-gray-300 shadow-sm bg-gray-50/50">
+        <table class="min-w-full divide-y divide-gray-300" id="items-table">
+          <thead class="bg-gray-100">
+            <tr>
+              <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">Product</th>
+              <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">Unit Cost</th>
+              <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">Quantity</th>
+              <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">Total</th>
+              <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                <span class="sr-only">Remove</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="items-body" class="divide-y divide-gray-200 bg-white">
+            {% if items %}
+              {% for item in items %}
+                <tr class="item-row hover:bg-gray-50 transition-colors duration-150">
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                    <select class="product input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" required>
+                      <option value="">Select product</option>
+                      {% for p in products %}
+                        <option value="{{ p.id }}" {% if item.product_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500"><input type="number" class="unitCostPrice input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" min="0" step="0.01" value="{{ item.unitCostPrice }}" required></td>
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500"><input type="number" class="orderQuantity input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" min="1" value="{{ item.orderQuantity }}" required></td>
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500"><input type="text" class="totalAmount input input-sm input-bordered w-full bg-gray-100 border-gray-300 rounded-md" value="{{ item.totalAmount }}" readonly></td>
+                  <td class="whitespace-nowrap py-3 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                    <button type="button" class="remove-row text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100 transition-colors duration-150" title="Remove">
+                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      <button type="button" id="add-item" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
+        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        Add Item
+      </button>
+    </div>
+
+    <div class="flex justify-end mt-12 pt-8 border-t border-gray-200">
+      <button type="submit" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-150">
+        {% if order %}Update{% else %}Create{% endif %} Order
+      </button>
+    </div>
+    <div id="form-messages" class="mt-6 text-sm"></div>
+  </form>
 </div>
+{% endblock %}
 
-<script src="{% static 'js/purchaseorder_form.js'%}"></script>
+{% block extra_js %}
+{{ products|json_script:"productsJson" }}
+<script>
+const products = JSON.parse(document.getElementById('productsJson').textContent);
 
+function recalcRow(row) {
+  const unitCost = parseFloat(row.querySelector('.unitCostPrice').value) || 0;
+  const qty = parseInt(row.querySelector('.orderQuantity').value) || 0;
+  row.querySelector('.totalAmount').value = (unitCost * qty).toFixed(2);
+}
+
+function addRow(productId = '', unitCost = '', qty = '') {
+  const tbody = document.getElementById('items-body');
+  const tr = document.createElement('tr');
+  tr.className = 'item-row hover:bg-gray-50 transition-colors duration-150';
+  tr.innerHTML = `
+    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+      <select class="product input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" required>
+        <option value="">Select product</option>
+        ${products.map(p => `<option value="${p.id}" ${p.id == productId ? 'selected' : ''}>${p.name}</option>`).join('')}
+      </select>
+    </td>
+    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500"><input type="number" class="unitCostPrice input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" min="0" step="0.01" value="${unitCost}" required></td>
+    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500"><input type="number" class="orderQuantity input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" min="1" value="${qty}" required></td>
+    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500"><input type="text" class="totalAmount input input-sm input-bordered w-full bg-gray-100 border-gray-300 rounded-md" value="0.00" readonly></td>
+    <td class="whitespace-nowrap py-3 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+      <button type="button" class="remove-row text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100 transition-colors duration-150" title="Remove">
+        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+        </svg>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  recalcRow(tr);
+}
+
+document.getElementById('add-item').addEventListener('click', function() {
+  addRow();
+});
+
+document.getElementById('items-body').addEventListener('input', function(e) {
+  if (e.target.classList.contains('unitCostPrice') || e.target.classList.contains('orderQuantity')) {
+    const row = e.target.closest('tr');
+    recalcRow(row);
+  }
+});
+
+document.getElementById('items-body').addEventListener('click', function(e) {
+  if (e.target.closest('.remove-row')) {
+    e.target.closest('tr').remove();
+  }
+});
+
+document.getElementById('purchaseorder-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const form = e.target;
+  const order = {
+    date: form.date.value,
+    supplier: form.supplier.value,
+    status: form.status.value,
+    paymentStatus: form.paymentStatus.value,
+    paymentType: form.paymentType.value,
+    deliveryWarehouse: form.deliveryWarehouse.value
+  };
+  if (form.deliveryDate.value) {
+    order.deliveryDate = form.deliveryDate.value;
+  }
+  const items = [];
+  document.querySelectorAll('#items-body .item-row').forEach(row => {
+    const product = row.querySelector('.product').value;
+    const unitCostPrice = row.querySelector('.unitCostPrice').value;
+    const orderQuantity = row.querySelector('.orderQuantity').value;
+    if (product && unitCostPrice && orderQuantity) {
+      items.push({ product, unitCostPrice, orderQuantity });
+    }
+  });
+  if (items.length === 0) {
+    showMessage('Please add at least one item.', true);
+    return;
+  }
+  const url = `{% if order %}/purchaseorders/api/{{ order.id }}/update/{% else %}/purchaseorders/api/create/{% endif %}`;
+  fetch(url, {
+    method: '{% if order %}PUT{% else %}POST{% endif %}',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({ order, items })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showMessage('Order saved successfully!', false);
+      setTimeout(() => { window.location.href = `/purchaseorders/${data.order_id}/`; }, 1000);
+    } else {
+      showMessage(data.error || 'An error occurred.', true);
+    }
+  })
+  .catch(() => showMessage('An error occurred.', true));
+});
+
+function showMessage(msg, isError) {
+  const el = document.getElementById('form-messages');
+  el.textContent = msg;
+  el.className = isError ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold';
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
 {% endblock %}
