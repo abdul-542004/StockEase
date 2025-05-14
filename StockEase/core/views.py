@@ -5,14 +5,27 @@ from django.contrib import messages
 from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User, Customer, Supplier, Warehouse, Location
 from .forms import *
 from django import forms
-from datetime import date, datetime
+from datetime import date
 import calendar
 import json
 from django.contrib.auth import logout, login, authenticate
 
+# Helper functions to check user roles
+
 def is_admin(user):
     return user.is_authenticated and user.role == 'administrator'
 
+def is_inventory_manager(user):
+    return user.is_authenticated and user.role == 'inventory_manager'
+
+def is_salesperson(user):
+    return user.is_authenticated and user.role == 'salesperson'
+
+def is_purchasing_manager(user):
+    return user.is_authenticated and user.role == 'purchasing_manager'
+
+
+# --- Authentication Views ---
 def login_view(request):
     """Login view"""
     if request.method == 'POST':
@@ -33,6 +46,8 @@ def logout_view(request):
     messages.success(request, 'You have been logged out successfully.')
     return redirect('login')
 
+
+# --- User CRUD Views ---
 @login_required
 @user_passes_test(is_admin)
 def user_list(request):
@@ -343,6 +358,7 @@ def location_delete(request, pk):
         return redirect('location_list')
     return render(request, 'core/location_confirm_delete.html', {'location': location})
 
+# --- Inventory CRUD Views ---
 @login_required
 @user_passes_test(is_admin)
 def inventory_list(request):
@@ -370,6 +386,7 @@ def inventory_list(request):
     }
     return render(request, 'core/inventory_list.html', context)
 
+# --- Sales Order CRUD Views ---
 @login_required
 @user_passes_test(is_admin)
 def salesorder_list(request):
@@ -383,10 +400,7 @@ def salesorder_list(request):
         'query': query,
     })
 
-@login_required
-@user_passes_test(is_admin)
-def salesorder_create(request):
-    pass
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -394,11 +408,8 @@ def salesorder_detail(request, pk):
     order = get_object_or_404(SalesOrder, pk=pk)
     return render(request, 'core/salesorder_detail.html', {'order': order})
 
-@login_required
-@user_passes_test(is_admin)
-def salesorder_update(request, pk):
-    pass
 
+# --- Dashboard View ---
 def dashboard(request):
     """Dashboard view showing key metrics and visualizations"""
     
