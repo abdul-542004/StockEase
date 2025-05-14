@@ -422,7 +422,140 @@ def salesorder_list(request):
 @user_passes_test(is_admin)
 def salesorder_detail(request, pk):
     order = get_object_or_404(SalesOrder, pk=pk)
-    return render(request, 'core/salesorder_detail.html', {'order': order})
+    return render(request, 'core/salesorder_detail.html', {
+        'order': order,
+        'created_by': order.createdBy,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def salesorder_form(request, pk=None):
+    if not pk:
+        order = None
+        items = []
+        created_by = request.user
+    else:
+        order = get_object_or_404(SalesOrder, pk=pk)
+        items = list(order.salesitem_set.select_related('product', 'warehouse').all())
+        created_by = order.createdBy
+    customers = list(Customer.objects.values('id', 'name', 'email'))
+    warehouses = list(Warehouse.objects.values('id', 'name'))
+    products = list(Product.objects.values('id', 'name', 'sellingPrice'))
+    # For warehouse filtering, provide inventory info per product
+    inventory = list(Inventory.objects.values('product_id', 'warehouse_id', 'quantityAvailable'))
+    context = {
+        'order': order,
+        'items': items,
+        'customers': customers,
+        'warehouses': warehouses,
+        'products': products,
+        'inventory': inventory,
+        'status_choices': SalesOrder.DELIVERY_STATUS_CHOICES,
+        'payment_choices': SalesOrder.PAYMENT_CHOICES,
+        'today': date.today().isoformat(),
+        'created_by': created_by,
+    }
+    return render(request, 'core/salesorder_form.html', context)
+
+
+# --- Sales Order AJAX API Endpoints ---
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def salesorder_create_api(request):
+    """API endpoint to create a SalesOrder and its items via JSON."""
+    try:
+        data = json.loads(request.body)
+        order_data = data.get('order', {})
+        items_data = data.get('items', [])
+
+        # Validate required fields
+        required_fields = ['date', 'customer', 'status', 'paymentType']
+        for field in required_fields:
+            if not order_data.get(field):
+                return JsonResponse({'success': False, 'error': f'Missing field: {field}'}, status=400)
+
+        customer = Customer.objects.get(pk=order_data['customer'])
+        so = SalesOrder.objects.create(
+            date=order_data['date'],
+            customer=customer,
+            status=order_data['status'],
+            paymentType=order_data['paymentType'],
+            createdBy=request.user
+        )
+
+        # Create SalesItems
+        for item in items_data:
+            product = Product.objects.get(pk=item['product'])
+            quantity = int(item['quantity'])
+            warehouse_id = item.get('warehouse')
+            if not warehouse_id:
+                # Auto-assign warehouse if not provided (handled in model)
+                SalesItem.objects.create(
+                    salesOrder=so,
+                    product=product,
+                    quantity=quantity
+                )
+            else:
+                warehouse = Warehouse.objects.get(pk=warehouse_id)
+                SalesItem.objects.create(
+                    salesOrder=so,
+                    product=product,
+                    quantity=quantity,
+                    warehouse=warehouse
+                )
+        so.update_totals()
+        return JsonResponse({'success': True, 'order_id': so.id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["PUT"])
+def salesorder_update_api(request, pk):
+    """API endpoint to update a SalesOrder and its items via JSON."""
+    try:
+        so = SalesOrder.objects.get(pk=pk)
+        if so.status == 'DELIVERED':
+            return JsonResponse({'success': False, 'error': 'Cannot update a delivered order.'}, status=400)
+        data = json.loads(request.body)
+        order_data = data.get('order', {})
+        items_data = data.get('items', [])
+
+        # Update SalesOrder fields
+        for field in ['date', 'status', 'paymentType']:
+            if field in order_data:
+                setattr(so, field, order_data[field])
+        if 'customer' in order_data:
+            so.customer = Customer.objects.get(pk=order_data['customer'])
+        # Do NOT update createdBy on edit
+        so.save()
+
+        # Remove all existing items and recreate
+        so.salesitem_set.all().delete()
+        for item in items_data:
+            product = Product.objects.get(pk=item['product'])
+            quantity = int(item['quantity'])
+            warehouse_id = item.get('warehouse')
+            if not warehouse_id:
+                SalesItem.objects.create(
+                    salesOrder=so,
+                    product=product,
+                    quantity=quantity
+                )
+            else:
+                warehouse = Warehouse.objects.get(pk=warehouse_id)
+                SalesItem.objects.create(
+                    salesOrder=so,
+                    product=product,
+                    quantity=quantity,
+                    warehouse=warehouse
+                )
+        so.update_totals()
+        return JsonResponse({'success': True, 'order_id': so.id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 # --- Purchase Order CRUD Views ---

@@ -56,6 +56,11 @@ urlpatterns = [
     # Sales Order URLs
     path('salesorders/', views.salesorder_list, name='salesorder_list'),
     path('salesorders/<int:pk>/', views.salesorder_detail, name='salesorder_detail'),
+    # Sales Order AJAX/API and Form URLs
+    path('salesorders/add/', views.salesorder_form, name='salesorder_add'),
+    path('salesorders/<int:pk>/edit/', views.salesorder_form, name='salesorder_edit'),
+    path('salesorders/api/create/', views.salesorder_create_api, name='salesorder_create_api'),
+    path('salesorders/api/<int:pk>/update/', views.salesorder_update_api, name='salesorder_update_api'),
 
     # Purchase Order URLs
     path('purchaseorders/', views.purchaseorder_list, name='purchaseorder_list'),

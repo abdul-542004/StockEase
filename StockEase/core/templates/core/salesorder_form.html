@@ -1,0 +1,120 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}{% if order %}Edit{% else %}Create{% endif %} Sales Order{% endblock %}
+{% block page_title %}{% if order %}Edit{% else %}Create{% endif %} Sales Order{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 sm:p-12 mt-8 border border-gray-200">
+    <form id="salesorder-form" class="space-y-12" {% if order %}data-update="{{ order.id }}"{% endif %}>    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+      <div>
+        <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
+        <input type="date" name="date" id="date" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" value="{{ order.date|default:today }}" required>
+      </div>
+      <div>
+        <label for="customer" class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+        <select name="customer" id="customer" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" required>
+          <option value="">Select customer</option>
+          {% for c in customers %}
+            <option value="{{ c.id }}" {% if order and order.customer_id == c.id %}selected{% endif %}>{{ c.name }} ({{ c.email }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select name="status" id="status" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" required>
+          {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if order and order.status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="md:col-span-2">
+        <label for="paymentType" class="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
+        <select name="paymentType" id="paymentType" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md" required>
+          {% for val, label in payment_choices %}
+            <option value="{{ val }}" {% if order and order.paymentType == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Created By</label>
+        <input type="text" class="input input-bordered w-full mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md bg-gray-100" value="{{ created_by.username }}" readonly>
+      </div>
+    </div>
+
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-6 flex items-center">
+        <svg class="h-6 w-6 text-indigo-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-17.25 4.5v-1.875a3.375 3.375 0 003.375-3.375h1.5a1.125 1.125 0 001.125-1.125V11.25m0 0V8.625c0-1.86 1.64-3.375 3.375-3.375h1.5c1.86 0 3.375 1.515 3.375 3.375V11.25m0 0h-6.75" />
+        </svg>
+        Order Items
+      </h3>
+      <div class="overflow-x-auto rounded-lg border border-gray-300 shadow-sm bg-gray-50/50">
+        <table class="min-w-full divide-y divide-gray-300" id="items-table">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">Product</th>
+              <th class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">Warehouse</th>
+              <th class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">Quantity</th>
+              <th class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">Total</th>
+              <th class="relative py-3.5 pl-3 pr-4 sm:pr-6"><span class="sr-only">Remove</span></th>
+            </tr>
+          </thead>
+          <tbody id="items-body" class="divide-y divide-gray-200 bg-white">
+            {% if items %}
+              {% for item in items %}
+                <tr class="item-row hover:bg-gray-50 transition-colors duration-150">
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                    <select class="product input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" required>
+                      <option value="">Select product</option>
+                      {% for p in products %}
+                        <option value="{{ p.id }}" {% if item.product_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                    <select class="warehouse input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" required>
+                      <option value="">Select warehouse</option>
+                      {% for w in warehouses %}
+                        <option value="{{ w.id }}" {% if item.warehouse_id == w.id %}selected{% endif %}>{{ w.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500"><input type="number" class="quantity input input-sm input-bordered w-full focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" min="1" value="{{ item.quantity }}" required></td>
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500"><input type="text" class="totalAmount input input-sm input-bordered w-full bg-gray-100 border-gray-300 rounded-md" value="{{ item.totalAmount }}" readonly></td>
+                  <td class="whitespace-nowrap py-3 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                    <button type="button" class="remove-row text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100 transition-colors duration-150" title="Remove">
+                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.282A48.11 48.11 0 006.75 5.79" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      <button type="button" id="add-item" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
+        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        Add Item
+      </button>
+    </div>
+
+    <div class="flex justify-end mt-12 pt-8 border-t border-gray-200">
+      <button type="submit" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-150">
+        {% if order %}Update{% else %}Create{% endif %} Order
+      </button>
+    </div>
+    <div id="form-messages" class="mt-6 text-sm"></div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ products|json_script:"productsJson" }}
+{{ warehouses|json_script:"warehousesJson" }}
+{{ inventory|json_script:"inventoryJson" }}
+<script src="{% static 'js/salesorder.js' %}"></script>
+{% endblock %}
