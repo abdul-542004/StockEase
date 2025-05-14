@@ -75,7 +75,7 @@ class WarehouseAdmin(admin.ModelAdmin):
 class InventoryInline(admin.TabularInline):
     model = Inventory
     extra = 1
-    fields = ('warehouse', 'quantityAvailable', 'minimumStockLevel', 'maximumStockLevel')
+    fields = ('warehouse',  'minimumStockLevel', 'maximumStockLevel')
 
 # Product Admin
 @admin.register(Product)
@@ -160,7 +160,7 @@ class SalesOrderAdmin(admin.ModelAdmin):
 # Inventory Admin
 @admin.register(Inventory)
 class InventoryAdmin(admin.ModelAdmin):
-    list_display = ('inventoryID', 'product_name', 'warehouse_name', 'quantityAvailable', 
+    list_display = ('inventoryID', 'product_name', 'warehouse_name',  
                    'minimumStockLevel', 'maximumStockLevel', 'stock_status')
     list_filter = ('warehouse', 'product__category')
     search_fields = ('product__name', 'warehouse__name')
