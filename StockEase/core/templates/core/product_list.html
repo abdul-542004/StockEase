@@ -28,7 +28,9 @@
           {% for product in products %}
           <tr>
             <td class="px-4 py-2">{{ product.barCode }}</td>
-            <td class="px-4 py-2 product-name">{{ product.name }}</td>
+            <td class="px-4 py-2 product-name">
+              <a href="{% url 'product_detail' product.pk %}" class="text-blue-700 hover:underline">{{ product.name }}</a>
+            </td>
             <td class="px-4 py-2">{{ product.category.title }}</td>
             <td class="px-4 py-2">{{ product.averageCostPrice }}</td>
             <td class="px-4 py-2">{{ product.sellingPrice }}</td>

@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Product Detail | StockEase{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-8">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Product Detail</h2>
+      <a href="{% url 'product_list' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded transition">Back to List</a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div>
+        <h3 class="text-lg font-semibold text-blue-800 mb-2">General Info</h3>
+        <div class="mb-2"><span class="font-semibold">Barcode:</span> {{ product.barCode }}</div>
+        <div class="mb-2"><span class="font-semibold">Name:</span> {{ product.name }}</div>
+        <div class="mb-2"><span class="font-semibold">Category:</span> {{ product.category.title }}</div>
+        <div class="mb-2"><span class="font-semibold">Description:</span> {{ product.description|default:'-' }}</div>
+        <div class="mb-2"><span class="font-semibold">Refrigerated:</span> {% if product.refrigerated %}Yes{% else %}No{% endif %}</div>
+        <div class="mb-2"><span class="font-semibold">Expiry Date:</span> {{ product.expiryDate|date:'Y-m-d'|default:'-' }}</div>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-blue-800 mb-2">Pricing</h3>
+        <div class="mb-2"><span class="font-semibold">Average Cost Price:</span> ${{ product.averageCostPrice }}</div>
+        <div class="mb-2"><span class="font-semibold">Selling Price:</span> ${{ product.sellingPrice }}</div>
+        <div class="mb-2"><span class="font-semibold">Packed Weight:</span> {{ product.packedWeight|default:'-' }}</div>
+        <div class="mb-2"><span class="font-semibold">Packed Dimensions (HxWxD):</span> {{ product.packedHeight|default:'-' }} x {{ product.packedWidth|default:'-' }} x {{ product.packedDepth|default:'-' }}</div>
+      </div>
+    </div>
+    <h3 class="text-lg font-semibold text-blue-800 mb-2">Inventory by Warehouse</h3>
+    <div class="overflow-x-auto mb-8">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Quantity Available</th>
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Min Stock</th>
+            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Max Stock</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+          {% for inv in inventories %}
+          <tr>
+            <td class="px-4 py-2">{{ inv.warehouse.name }} ({{ inv.warehouse.location.name }})</td>
+            <td class="px-4 py-2 text-right">{{ inv.quantityAvailable }}</td>
+            <td class="px-4 py-2 text-right">{{ inv.minimumStockLevel }}</td>
+            <td class="px-4 py-2 text-right">{{ inv.maximumStockLevel }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center py-4 text-gray-500">No inventory records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="flex gap-3">
+      <a href="{% url 'product_update' product.pk %}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded transition">Edit</a>
+      <a href="{% url 'product_delete' product.pk %}" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded transition">Delete</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

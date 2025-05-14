@@ -224,6 +224,14 @@ def product_delete(request, pk):
         return redirect('product_list')
     return render(request, 'core/entity_confirm_delete.html', {'product': product})
 
+def product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    inventories = product.inventory_set.select_related('warehouse').all()
+    return render(request, 'core/product_detail.html', {
+        'product': product,
+        'inventories': inventories,
+    })
+
 # --- Customer CRUD Views ---
 @login_required
 @user_passes_test(is_admin)

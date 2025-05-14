@@ -35,8 +35,8 @@
                     <td class="px-6 py-4 whitespace-nowrap">{{ user.last_name }}</td>
                     <td class="px-6 py-4 whitespace-nowrap capitalize">{{ user.get_role_display }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="{% url 'user_update' user.pk %}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                        <a href="{% url 'user_delete' user.pk %}" class="text-red-600 hover:text-red-900">Delete</a>
+                        <a href="{% url 'user_update' user.pk %}" class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs">Edit</a>
+                        <a href="{% url 'user_delete' user.pk %}" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">Delete</a>
                     </td>
                 </tr>
                 {% empty %}
