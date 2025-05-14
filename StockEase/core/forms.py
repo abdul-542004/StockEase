@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.forms import ModelForm, inlineformset_factory
 from .models import *
 
 
@@ -160,3 +161,5 @@ class ProductForm(forms.ModelForm):
             'packedDepth': forms.NumberInput(attrs={'class': 'input input-bordered w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400', 'step': '0.01'}),
             'refrigerated': forms.CheckboxInput(attrs={'class': 'form-checkbox h-5 w-5 text-blue-600'}),
         }
+
+

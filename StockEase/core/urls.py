@@ -51,4 +51,10 @@ urlpatterns = [
 
     # Inventory URLs
     path('inventory/', views.inventory_list, name='inventory_list'),
+
+    # Sales Order URLs
+    path('salesorders/', views.salesorder_list, name='salesorder_list'),
+    path('salesorders/add/', views.salesorder_create, name='salesorder_create'),
+    path('salesorders/<int:pk>/', views.salesorder_detail, name='salesorder_detail'),
+    path('salesorders/<int:pk>/update/', views.salesorder_update, name='salesorder_update'),
 ]

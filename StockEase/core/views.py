@@ -370,6 +370,35 @@ def inventory_list(request):
     }
     return render(request, 'core/inventory_list.html', context)
 
+@login_required
+@user_passes_test(is_admin)
+def salesorder_list(request):
+    query = request.GET.get('q', '').strip()
+    sales_orders = SalesOrder.objects.select_related('customer').all()
+    if query:
+        sales_orders = sales_orders.filter(customer__name__icontains=query)
+    sales_orders = sales_orders.order_by('-date', '-id')
+    return render(request, 'core/salesorder_list.html', {
+        'sales_orders': sales_orders,
+        'query': query,
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def salesorder_create(request):
+    pass
+
+@login_required
+@user_passes_test(is_admin)
+def salesorder_detail(request, pk):
+    order = get_object_or_404(SalesOrder, pk=pk)
+    return render(request, 'core/salesorder_detail.html', {'order': order})
+
+@login_required
+@user_passes_test(is_admin)
+def salesorder_update(request, pk):
+    pass
+
 def dashboard(request):
     """Dashboard view showing key metrics and visualizations"""
     
