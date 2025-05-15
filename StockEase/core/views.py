@@ -2,19 +2,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count, Sum, F
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User, Customer, Supplier, Warehouse, Location
+from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User, Customer, Supplier, Warehouse, Location, SalesItem
 from .forms import *
 from django import forms
-from datetime import date
+from datetime import date, datetime
 import calendar
 import json
 from django.contrib.auth import logout, login, authenticate
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
+# Import the entire reports module instead of specific functions
+from . import reports
 
 import decimal
 
@@ -850,3 +852,116 @@ def dashboard(request):
     }
     
     return render(request, 'core/dashboard.html', context)
+
+
+# --- Reports Views ---
+
+@login_required
+def reports_index(request):
+    """
+    Main reports dashboard page with options to generate different reports
+    """
+    # Get all product categories for the filter dropdowns
+    categories = Category.objects.all().order_by('title')
+    
+    context = {
+        'categories': categories,
+    }
+    
+    return render(request, 'core/reports_index.html', context)
+
+@login_required
+def product_profitability_report(request):
+    """
+    Generate Product Profitability Report in PDF format
+    """
+    # Parse request parameters
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    category = request.GET.get('category')
+    
+    # Convert string dates to date objects
+    if start_date:
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = None
+    
+    if end_date:
+        try:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        except ValueError:
+            end_date = None
+    
+    # Convert category to integer if provided
+    if category:
+        try:
+            category = int(category)
+        except ValueError:
+            category = None
+      # Generate the report
+    return reports.generate_product_profitability_report(start_date, end_date, category)
+
+@login_required
+def top_products_report(request):
+    """
+    Generate Top Products Report in PDF format
+    """
+    # Parse request parameters
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    category = request.GET.get('category')
+    metric = request.GET.get('metric', 'quantity')
+    
+    # Validate metric
+    if metric not in ['quantity', 'revenue', 'profit']:
+        metric = 'quantity'
+    
+    # Convert string dates to date objects
+    if start_date:
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = None
+    
+    if end_date:
+        try:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        except ValueError:
+            end_date = None
+    
+    # Convert category to integer if provided
+    if category:
+        try:
+            category = int(category)
+        except ValueError:
+            category = None
+      # Generate the report
+    return reports.generate_top_products_report(start_date, end_date, category, metric)
+
+@login_required
+def sales_purchase_dashboard(request):
+    """
+    Generate Sales vs Purchase Dashboard in PDF format
+    """
+    # Parse request parameters
+    period = request.GET.get('period', 'monthly')
+    months = request.GET.get('months', '12')
+    
+    # Validate period
+    if period not in ['daily', 'weekly', 'monthly']:
+        period = 'monthly'
+    
+    # Convert months to integer
+    try:
+        months = int(months)
+    except ValueError:
+        months = 12
+    
+    # Limit months to reasonable range
+    if months < 1:
+        months = 1
+    elif months > 36:
+        months = 36
+      # Generate the dashboard
+    return reports.generate_sales_purchase_dashboard(period, months)

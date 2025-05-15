@@ -1,0 +1,115 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Reports Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Reports Dashboard</h1>
+    
+    <div class="row">
+        <!-- Product Profitability Report Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Product Profitability Report</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Analyze product profitability by evaluating cost, revenue, and margins.</p>
+                    <form action="{% url 'product_profitability_report' %}" method="GET">
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-control" id="category" name="category">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generate Report</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top Products Report Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Top Products Report</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">View top-performing products by quantity sold, revenue, or profit.</p>
+                    <form action="{% url 'top_products_report' %}" method="GET">
+                        <div class="mb-3">
+                            <label for="start_date_top" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date_top" name="start_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="end_date_top" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date_top" name="end_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="category_top" class="form-label">Category</label>
+                            <select class="form-control" id="category_top" name="category">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="metric" class="form-label">Metric</label>
+                            <select class="form-control" id="metric" name="metric">
+                                <option value="quantity">Quantity Sold</option>
+                                <option value="revenue">Revenue</option>
+                                <option value="profit">Profit</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success">Generate Report</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sales vs Purchase Dashboard Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Sales vs Purchase Dashboard</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Compare sales and purchases over time with profit analysis.</p>
+                    <form action="{% url 'sales_purchase_dashboard' %}" method="GET">
+                        <div class="mb-3">
+                            <label for="period" class="form-label">Time Period</label>
+                            <select class="form-control" id="period" name="period">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly" selected>Monthly</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="months" class="form-label">Number of Months</label>
+                            <select class="form-control" id="months" name="months">
+                                <option value="3">Last 3 months</option>
+                                <option value="6">Last 6 months</option>
+                                <option value="12" selected>Last 12 months</option>
+                                <option value="24">Last 24 months</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-info">Generate Dashboard</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
