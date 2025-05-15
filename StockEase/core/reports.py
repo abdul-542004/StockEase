@@ -456,12 +456,11 @@ def generate_product_profitability_report(start_date=None, end_date=None, catego
         bc.width = 400
         bc.data = [[item['profit'] for item in top5_by_profit]]
         bc.strokeColor = colors.black
-        
-        # Y-axis
+          # Y-axis
         bc.valueAxis.valueMin = 0
         bc.valueAxis.valueMax = max([item['profit'] for item in top5_by_profit]) * 1.1
         bc.valueAxis.valueStep = bc.valueAxis.valueMax / 5
-        bc.valueAxis.labelTextFormat = '${:.0f}'
+        bc.valueAxis.labelTextFormat = lambda x: '${:.0f}'.format(x)
         
         # X-axis
         bc.categoryAxis.categoryNames = [item['product_name'] for item in top5_by_profit]
