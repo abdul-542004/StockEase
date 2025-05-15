@@ -7,7 +7,8 @@ from reportlab.graphics.shapes import Drawing, Circle, Rect
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.charts.piecharts import Pie
-from django.db.models import Sum, F, Count, ExpressionWrapper, DecimalField, Q
+from django.db.models import Sum, F, Count, ExpressionWrapper, DecimalField, Q, Func
+from django.db.models.functions import TruncDate, TruncMonth, TruncWeek, Cast
 from datetime import datetime, timedelta
 from io import BytesIO
 from django.http import HttpResponse
@@ -67,9 +68,8 @@ def get_product_profitability_data(start_date=None, end_date=None, category=None
             'total_quantity': 0,
             'total_revenue': 0
         })
-        
         quantity_sold = sales_info['total_quantity'] or 0
-        revenue = sales_info['total_revenue'] or 0
+        revenue = float(sales_info['total_revenue'] or 0)
         
         # Calculate costs and profit
         cost_price = float(product.averageCostPrice)
@@ -200,13 +200,13 @@ def get_sales_purchase_dashboard_data(period='monthly', months=12):
     
     # Define date trunc function based on period
     if period == 'daily':
-        date_trunc = 'date'
+        trunc_func = TruncDate('date')
         format_string = '%Y-%m-%d'
     elif period == 'weekly':
-        date_trunc = 'week'  # This will need custom handling
+        trunc_func = TruncWeek('date')  
         format_string = 'Week %W, %Y'
     else:  # monthly
-        date_trunc = 'month'
+        trunc_func = TruncMonth('date')
         format_string = '%b %Y'
     
     # Get sales data
@@ -270,8 +270,8 @@ def get_sales_purchase_dashboard_data(period='monthly', months=12):
         sales_data = SalesOrder.objects.filter(
             date__gte=start_date,
             status='DELIVERED'
-        ).extra(
-            select={'trunc_date': f"date_trunc('{date_trunc}', date)"}
+        ).annotate(
+            trunc_date=trunc_func
         ).values(
             'trunc_date'
         ).annotate(
@@ -281,8 +281,8 @@ def get_sales_purchase_dashboard_data(period='monthly', months=12):
         purchase_data = PurchaseOrder.objects.filter(
             date__gte=start_date,
             status='RECEIVED'
-        ).extra(
-            select={'trunc_date': f"date_trunc('{date_trunc}', date)"}
+        ).annotate(
+            trunc_date=trunc_func
         ).values(
             'trunc_date'
         ).annotate(
@@ -787,13 +787,12 @@ def generate_sales_purchase_dashboard(period='monthly', months=12):
         lc.categoryAxis.labels.dx = 8
         lc.categoryAxis.labels.dy = -2
         lc.categoryAxis.labels.angle = 30
-        
-        # Set value axis properties
+          # Set value axis properties
         max_value = max(max(sales_values or [0]), max(purchase_values or [0]))
         lc.valueAxis.valueMin = 0
         lc.valueAxis.valueMax = max_value * 1.1
         lc.valueAxis.valueStep = max_value / 5
-        lc.valueAxis.labelTextFormat = '${:,.0f}'
+        lc.valueAxis.labelTextFormat = lambda x: '${:,.0f}'.format(x)
         
         # Set line colors and styles
         lc.lines[0].strokeColor = colors.blue
@@ -807,7 +806,7 @@ def generate_sales_purchase_dashboard(period='monthly', months=12):
         lc.lines[1].name = 'Purchases'
         
         # Add legend
-        lc.lineLabelFormat = '${:,.0f}'
+        lc.lineLabelFormat = None
         lc.strokeColor = colors.black
         
         drawing.add(lc)
@@ -842,9 +841,10 @@ def generate_sales_purchase_dashboard(period='monthly', months=12):
 
 # Helper function for the line chart markers
 def makeMarker(name):
+    from reportlab.graphics.widgets.markers import makeMarker as makeReportLabMarker
     if name == 'FilledCircle':
-        return Circle(0, 0, 5, fillColor=colors.blue)
+        return makeReportLabMarker('FilledCircle', fillColor=colors.blue, size=5)
     elif name == 'FilledDiamond':
-        return Rect(0, 0, 5, 5, fillColor=colors.red)
+        return makeReportLabMarker('FilledDiamond', fillColor=colors.red, size=5)
     else:
         return None
