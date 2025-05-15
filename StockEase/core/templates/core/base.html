@@ -47,11 +47,10 @@
                         </a>
                         <a href="/salesorders/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
                             <i class="fas fa-shopping-cart mr-3"></i> Sales Order
-                        </a>
-                        <a href="/purchaseorders/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                        </a>                        <a href="/purchaseorders/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
                             <i class="fas fa-truck-loading mr-3"></i> Purchase Order
                         </a>
-                        <a href="/reports/" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
+                        <a href="{% url 'reports_index' %}" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
                             <i class="fas fa-chart-bar mr-3"></i> Reports
                         </a>
                     {% elif user.role == 'inventory_manager' %}

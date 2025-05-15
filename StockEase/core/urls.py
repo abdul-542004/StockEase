@@ -70,4 +70,10 @@ urlpatterns = [
     # AJAX API endpoints
     path('purchaseorders/api/create/', views.purchaseorder_create_api, name='purchaseorder_create_api'),
     path('purchaseorders/api/<int:pk>/update/', views.purchaseorder_update_api, name='purchaseorder_update_api'),
+
+    # Report URLs
+    path('reports/', views.reports_index, name='reports_index'),
+    path('reports/product-profitability/', views.product_profitability_report, name='product_profitability_report'),
+    path('reports/top-products/', views.top_products_report, name='top_products_report'),
+    path('reports/sales-purchase-dashboard/', views.sales_purchase_dashboard, name='sales_purchase_dashboard'),
 ]
