@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="max-w-xl mx-auto mt-8 p-6 bg-white rounded shadow">
+    <h2 class="text-2xl font-bold mb-4">{{ title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="space-y-4">
+            <div>
+                <label class="block font-semibold mb-1">Product</label>
+                <input type="text" value="{{ form.instance.product.name }}" class="input input-bordered w-full bg-gray-100 cursor-not-allowed" readonly>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Warehouse</label>
+                <input type="text" value="{{ form.instance.warehouse.name }}" class="input input-bordered w-full bg-gray-100 cursor-not-allowed" readonly>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Current Quantity</label>
+                <input type="number" value="{{ form.instance.quantityAvailable }}" class="input input-bordered w-full bg-gray-100 cursor-not-allowed" readonly>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Minimum Stock Level</label>
+                {{ form.minimumStockLevel }}
+                {% for error in form.minimumStockLevel.errors %}
+                    <p class="text-red-600 text-xs">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Maximum Stock Level</label>
+                {{ form.maximumStockLevel }}
+                {% for error in form.maximumStockLevel.errors %}
+                    <p class="text-red-600 text-xs">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- Add hidden fields for product and warehouse -->
+        {{ form.product.as_hidden }}
+        {{ form.warehouse.as_hidden }}
+        <div class="mt-6 flex justify-between items-center">
+            <a href="{% url 'inventory_list' %}" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition ease-in-out duration-150">Cancel</a>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

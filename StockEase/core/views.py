@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .models import Category, Product, Inventory, SalesOrder, PurchaseOrder, PurchaseItem, User, Customer, Supplier, Warehouse, Location, SalesItem
 from .forms import *
+from .inventory_forms import InventoryForm
 from django import forms
 from datetime import date, datetime
 import calendar
@@ -403,6 +404,19 @@ def inventory_list(request):
         'query': query,
     }
     return render(request, 'core/inventory_list.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def inventory_edit(request, pk):
+    inventory = get_object_or_404(Inventory, pk=pk)
+    if request.method == 'POST':
+        form = InventoryForm(request.POST, instance=inventory)
+        if form.is_valid():
+            form.save()
+            return redirect('inventory_list')
+    else:
+        form = InventoryForm(instance=inventory)
+    return render(request, 'core/inventory_form.html', {'form': form, 'title': 'Edit Inventory'})
 
 # --- Sales Order CRUD Views ---
 @login_required
